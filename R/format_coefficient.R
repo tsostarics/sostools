@@ -13,7 +13,7 @@ format_coef <- function(coeff, clist) {
   p.value <- format_pval(clist[[coeff]][[ncol(clist[[coeff]])]])
   beta <- clist[[coeff]][["Estimate"]]
   se <- clist[[coeff]][["StdError"]]
-  stat_name <- names(clist[[coeff]][3L])
+  stat_name <- names(clist[[coeff]][4L])
   stat_var <- gsub("value", "", stat_name)
   stat_val <- clist[[coeff]][[stat_name]]
 
