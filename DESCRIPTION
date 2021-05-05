@@ -10,6 +10,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
+    broom.mixed,
     dplyr,
     glue,
     magrittr,
@@ -21,6 +22,8 @@ Imports:
     tidyselect
 RoxygenNote: 7.1.1
 Suggests: 
+    scales,
+    knitr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: https://github.com/tsostarics/sostools
