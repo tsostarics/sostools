@@ -15,13 +15,19 @@
 summary_as_tex <- function(model, statistic = "$z$", caption = NA, label = NA){
   requireNamespace("knitr", quietly = TRUE)
   requireNamespace("scales", quietly = TRUE)
+
+  if (class(model) == "clmm")
+    return(.summary_as_tex.clmm(model, statistic, caption, label))
+
   if (knitr::is_html_output())
     outformat  <-  "pipe"
   else
     outformat <- "latex"
+
   model %>%
     broom.mixed::tidy() %>%
-    dplyr:: mutate(p.value = scales::pvalue(p.value)) %>%
+    dplyr::mutate(p.value = scales::pvalue(p.value),
+                  term = gsub("_","\\\\_",term)) %>%
     dplyr::filter(is.na(group)) %>% # note this will cause issues for non mixed models
     dplyr::select(-effect, -group) %>%
     knitr::kable(digits = c(0,2,2,2,3),
@@ -38,3 +44,68 @@ summary_as_tex <- function(model, statistic = "$z$", caption = NA, label = NA){
                  table.envir = "table",
                  label = label)
 }
+
+# summary_as_tex.lm <- function(model, statistic = "$t$", caption = NA, label = NA){
+#
+# }
+
+.summary_as_tex.clmm <- function(model, statistic = "$z$", caption = NA, label = NA) {
+
+  if (knitr::is_html_output())
+    outformat  <-  "pipe"
+  else
+    outformat <- "latex"
+
+  model %>%
+    broom::tidy() %>%
+    dplyr::mutate(p.value = scales::pvalue(p.value),
+                  term = gsub("_","\\\\_",term),
+                  term = ifelse(coef.type == 'intercept',
+                                paste0("$\\theta_{",term,"}$"),
+                                term)
+    ) %>%
+    dplyr::select(-coef.type) %>%
+    knitr::kable(digits = c(0,2,2,2,0),
+                 col.names = c("Term",
+                               "Estimate",
+                               "SE",
+                               "$z$",
+                               "$p$"),
+                 caption = caption,
+                 escape = FALSE,
+                 format = outformat,
+                 booktabs = TRUE,
+                 longtable = FALSE,
+                 table.envir = "table",
+                 label = label)
+}
+
+#' Add addlinespace commands to latex table
+#'
+#' Default output of latex tables will add some addlinespace commands for you,
+#' but you can provide which terms you want to add the spaces after with this
+#' command. Note that special characters like curly braces should be escaped
+#' with two backslashes.
+#'
+#' @param table Latex table
+#' @param terms Strings, which terms to add addlinespace after
+#' @export
+addlinespace <- function(table, terms) {
+  requireNamespace("stringi", quietly = TRUE)
+  if (!knitr::is_latex_output())
+    return(table)
+
+  line_regexes <-
+    vapply(terms,
+           function(x) paste0("(",x,".+\\\\)"),
+           "char"
+    )
+  latex_table <- gsub("\n\\\\addlinespace","",table)
+  for (line in line_regexes) {
+    latex_table <- stringi::stri_replace_all_regex(latex_table, line, "$1\n\\\\addlinespace")
+  }
+  class(latex_table) <- "knitr_kable"
+  attr(latex_table, "format") <- "latex"
+  latex_table
+}
+

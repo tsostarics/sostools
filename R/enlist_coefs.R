@@ -15,7 +15,7 @@ enlist_coefs <- function(mdl){
   coefs <-
     summary(mdl)$coefficients %>%
     tibble::as_tibble(rownames = 'coefficient',
-                      .name_repair = function(x) gsub("[ .()|>]","",x)) %>%
+                      .name_repair = function(x) gsub("[ .()>]","",x)) %>%
     dplyr::mutate(dplyr::across(Estimate:tidyselect::last_col(offset = 1L), # change this to be more general later
                                 function(x)
                                   round(x,2)
@@ -24,7 +24,7 @@ enlist_coefs <- function(mdl){
     dplyr::group_by(coefficient) %>%
     dplyr::group_split() %>%
     setNames(.,
-             gsub("[ .()|>]", "", vapply(.,
+             gsub("[ .()>]", "", vapply(.,
                                          function(x)
                                            x[["coefficient"]], "char"
              )
