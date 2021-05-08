@@ -4,12 +4,14 @@
 \alias{format_coef}
 \title{Format coefficients}
 \usage{
-format_coef(coeff, clist)
+format_coef(coeff, clist, stat_name)
 }
 \arguments{
 \item{coeff}{Which coefficient to format}
 
 \item{clist}{The list of coefficient data to use}
+
+\item{stat_name}{Name of the statistic}
 }
 \value{
 A string of coefficient descriptions

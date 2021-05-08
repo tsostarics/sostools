@@ -6,26 +6,31 @@
 #' but I'll make something more general later when/if I need it.
 #'
 #' @param model Model object
+#' @param correct Regular expressions targeting coefficients to bonferroni correct
 #' @param statistic Header label for the test statistic, recommended to bookend
 #' in $s
 #' @param caption Caption to use for the table
 #' @param label Label to use when referencing the table
 #'
 #' @export
-summary_as_tex <- function(model, statistic = "$z$", caption = NA, label = NA){
+summary_as_tex <- function(model, correct=NA, statistic = "$z$", caption = NA, label = NA){
   requireNamespace("knitr", quietly = TRUE)
   requireNamespace("scales", quietly = TRUE)
 
   if (class(model) == "clmm")
-    return(.summary_as_tex.clmm(model, statistic, caption, label))
+    return(.summary_as_tex.clmm(model, correct, statistic, caption, label))
 
   if (knitr::is_html_output())
     outformat  <-  "pipe"
   else
     outformat <- "latex"
 
-  model %>%
-    broom.mixed::tidy() %>%
+  coefs <- broom::tidy(model)
+
+  if(any(!is.na(correct)))
+    coefs <- .adjust_pvals(coefs, correct)
+
+  coefs %>%
     dplyr::mutate(p.value = scales::pvalue(p.value),
                   term = gsub("_","\\\\_",term)) %>%
     dplyr::filter(is.na(group)) %>% # note this will cause issues for non mixed models
@@ -49,15 +54,19 @@ summary_as_tex <- function(model, statistic = "$z$", caption = NA, label = NA){
 #
 # }
 
-.summary_as_tex.clmm <- function(model, statistic = "$z$", caption = NA, label = NA) {
+.summary_as_tex.clmm <- function(model, correct, statistic = "$z$", caption = NA, label = NA) {
 
   if (knitr::is_html_output())
     outformat  <-  "pipe"
   else
     outformat <- "latex"
 
-  model %>%
-    broom::tidy() %>%
+  coefs <- broom::tidy(model)
+
+  if(any(!is.na(correct)))
+    coefs <- .adjust_pvals(coefs, correct)
+
+  coefs %>%
     dplyr::mutate(p.value = scales::pvalue(p.value),
                   term = gsub("_","\\\\_",term),
                   term = ifelse(coef.type == 'intercept',

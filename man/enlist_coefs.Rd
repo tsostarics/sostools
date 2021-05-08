@@ -4,10 +4,12 @@
 \alias{enlist_coefs}
 \title{Enlist Coefficients}
 \usage{
-enlist_coefs(mdl)
+enlist_coefs(mdl, correct = NA)
 }
 \arguments{
 \item{mdl}{A model object with a summary method}
+
+\item{correct}{Regular expressions targeting coefficients to bonferroni correct}
 }
 \value{
 A list of coefficient descriptions of the form (Beta = b, s.e.=se, z=z, p=p)

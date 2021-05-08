@@ -4,10 +4,18 @@
 \alias{summary_as_tex}
 \title{Model Summary as table}
 \usage{
-summary_as_tex(model, statistic = "$z$", caption = NA, label = NA)
+summary_as_tex(
+  model,
+  correct = NA,
+  statistic = "$z$",
+  caption = NA,
+  label = NA
+)
 }
 \arguments{
 \item{model}{Model object}
+
+\item{correct}{Regular expressions targeting coefficients to bonferroni correct}
 
 \item{statistic}{Header label for the test statistic, recommended to bookend
 in $s}

@@ -6,16 +6,16 @@
 #'
 #' @param coeff Which coefficient to format
 #' @param clist The list of coefficient data to use
-#'
+#' @param stat_name Name of the statistic
 #' @return A string of coefficient descriptions
 #' @export
-format_coef <- function(coeff, clist) {
+format_coef <- function(coeff, clist, stat_name) {
   p.value <- format_pval(clist[[coeff]][[ncol(clist[[coeff]])]])
-  beta <- clist[[coeff]][["Estimate"]]
-  se <- clist[[coeff]][["StdError"]]
-  stat_name <- names(clist[[coeff]][4L])
-  stat_var <- gsub("value", "", stat_name)
-  stat_val <- clist[[coeff]][[stat_name]]
+  beta <- clist[[coeff]][["estimate"]]
+  se <- clist[[coeff]][["std.error"]]
+  # stat_name <- names(clist[[coeff]][4L])
+  stat_var <- gsub(" *value", "", stat_name)
+  stat_val <- clist[[coeff]][["statistic"]]
   coef_symbol <- ifelse(grepl("\\d\\|\\d", coeff), paste0("\\hat\\theta_{",coeff,"}"), "\\beta")
   glue::glue("$({coef_symbol} = {beta}, {stat_var} = {stat_val}, s.e. = {se}, {p.value})$")
 }
