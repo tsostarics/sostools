@@ -18,7 +18,12 @@ enlist_coefs <- function(mdl, correct = NA){
     broom::tidy() %>%
     dplyr::mutate(dplyr::across(estimate:statistic, function(x) round(x,2)))
 
+  # Remove coef type column from clmm models
   coefs['coef.type'] <- NULL
+
+  # Filter out random effects if needed
+  if ('group' %in% names(coefs))
+    coefs <- dplyr::filter(coefs, is.na(group)) %>% dplyr::select(-group)
 
   if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
