@@ -27,5 +27,10 @@ contrast_code <- function(factor_col, coding_matrix = NA) {
   }
 
   dimnames(new_contrasts) <- labels
-  new_contrasts
+  .reset_reference(new_contrasts)
+}
+
+.reset_reference <- function(cmat) {
+  colnames(cmat) <- unname(apply(cmat, 2, function(x) rownames(cmat)[x>0]))
+  cmat
 }
