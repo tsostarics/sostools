@@ -47,11 +47,14 @@ coefs <- enlist_coefs(mdl) # Create coefficients
 get_coef1 <- make_coef_getter(mdl) # Using the model object directly
 get_coef2 <- make_coef_getter(coefs) # Using the list of coefficients we made
 get_coef("cyl:gear", coefs)
+get_coef1("cyl:gear")
+get_coef2("cyl:gear")
 ```
 
 Here we can get the formatted values of a write up easily with in-line R code.
-We found no effect of cylinder `r get_coef2("cyl")` or gear `r get_coef2("gear")`
-nor an interaction `r get_coef2("cyl:gear")`.
+You could say something like: We found no significant effect of cylinder 
+`r get_coef2("cyl")` or gear `r get_coef2("gear")` nor a significant interaction
+between the two `r get_coef2("cyl:gear")`.
 
 ## Retain contrast coding labels
 
@@ -60,17 +63,24 @@ mdl_data <-
   mtcars %>% 
   as_tibble() %>% 
   mutate(cyl = factor(cyl), 
-         twolevel = factor(round(runif(n()),0)))
+         twolevel = round(runif(n()),0),
+         twolevel = ifelse(twolevel == 1, "a", "b"),
+         twolevel = factor(twolevel))
 contrasts(mdl_data$cyl) # 3 level treatment coding
 contrasts(mdl_data$twolevel) # 2 level treatment coding
 contrast_code(mdl_data$twolevel) # 2 level scaled sum coding
 
 # note the matrix orientation for 3 level scaled sum coding
 contrasts(mdl_data$cyl) <- contrast_code(mdl_data$cyl,
-                                        matrix(c(-1/3, 2/3, -1/3,
+                                        matrix(c(2/3, -1/3, -1/3,
                                                  -1/3, -1/3, 2/3),
                                                nrow = 3))
 
-contrasts(mdl_data$cyl) # contrasts now updated with labels retained
+# contrasts now updated with labels retained and proper comparison labels
+# set depending on what the reference level is (here, 6 is the reference)
+contrasts(mdl_data$cyl) 
+
+# also works for polynomial coding
+contrast_code(mdl_data$cyl, contr.poly(3))
 ```
 
