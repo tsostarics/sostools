@@ -13,6 +13,7 @@
 #' @param label Label to use when referencing the table
 #'
 #' @export
+#' @importFrom stats p.adjust
 summary_as_tex <- function(model, correct=NA, statistic = "$z$", caption = NA, label = NA){
   requireNamespace("knitr", quietly = TRUE)
   requireNamespace("scales", quietly = TRUE)

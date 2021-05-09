@@ -20,5 +20,6 @@ labels of the levels IN THE ORDER THEY APPEAR IN THE ORIGINAL CONTRAST
 SCHEME. Usually in alphabetical order. Will default to scaled sum coding
 for 2 level factors with first alphabetically as the reference level. If
 it's greater than 2 levels you MUST provide your own matrix using the matrix
-function.
+function. If you choose to change the reference level, this will rename the
+comparison labels (the column names in the matrix) accordingly.
 }
