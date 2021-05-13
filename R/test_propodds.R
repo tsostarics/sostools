@@ -34,7 +34,7 @@ test_propodds <- function(ord_data, model_formula) {
 
   # Remove the random effects and intercepts terms from the checks
   term_names <- unique(results[['term']])
-  term_names <- str_sort(term_names[!grepl("(Intercept)|\\.sig", term_names)])
+  term_names <- stringr::str_sort(term_names[!grepl("(Intercept)|\\.sig", term_names)])
 
   # Check if confidence intervals are far from the mean for each term
   propodds_checks <-
