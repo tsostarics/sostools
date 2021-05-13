@@ -21,5 +21,6 @@ SCHEME. Usually in alphabetical order. Will default to scaled sum coding
 for 2 level factors with first alphabetically as the reference level. If
 it's greater than 2 levels you MUST provide your own matrix using the matrix
 function. If you choose to change the reference level, this will rename the
-comparison labels (the column names in the matrix) accordingly.
+comparison labels (the column names in the matrix) accordingly. If you use
+polynomial coding the correct comparison labels will also be used.
 }
