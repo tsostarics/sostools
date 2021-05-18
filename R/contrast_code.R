@@ -34,13 +34,15 @@ contrast_code <- function(factor_col, coding_matrix = NA) {
 
 .reset_comparison_labels <- function(contr_mat) {
   if (.check_polynomial(contr_mat))
-    colnames(contr_mat) <- colnames(contr.poly(nrow(contr_mat)))
+    colnames(contr_mat) <- contr_mat |> nrow() |> contr.poly() |> colnames()
   else
-    colnames(contr_mat) <- unname(apply(contr_mat, 2, function(x) rownames(contr_mat)[x > 0]))
+    colnames(contr_mat) <-
+      unname(apply(contr_mat, 2, \(x) rownames(contr_mat)[x > 0]))
+
   contr_mat
 }
 
 .check_polynomial <- function(contr_mat) {
-  check_val <- round(contr.poly(nrow(contr_mat))[1],3)
+  check_val <- round(contr.poly(nrow(contr_mat))[1], 3)
   check_val %in% round(contr_mat, 3)
 }

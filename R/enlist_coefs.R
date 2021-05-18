@@ -14,8 +14,8 @@
 enlist_coefs <- function(mdl, correct = NA){
 
   coefs <-
-    mdl %>%
-    broom::tidy() %>%
+    mdl |>
+    broom::tidy() |>
     dplyr::mutate(dplyr::across(estimate:statistic, function(x) round(x,2)))
 
   # Remove coef type column from clmm models
@@ -23,7 +23,7 @@ enlist_coefs <- function(mdl, correct = NA){
 
   # Filter out random effects if needed
   if ('group' %in% names(coefs))
-    coefs <- dplyr::filter(coefs, is.na(group)) %>% dplyr::select(-group)
+    coefs <- dplyr::filter(coefs, is.na(group)) |> dplyr::select(-group)
 
   if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
@@ -31,23 +31,14 @@ enlist_coefs <- function(mdl, correct = NA){
   statistic_name <- colnames(summary(mdl)$coefficients)[[3L]]
 
   # Split into list
-  coefs <-
-    coefs %>%
-    dplyr::group_by(term) %>%
-    dplyr::group_split() %>%
-    setNames(.,
-             gsub("[ .()>]", "", vapply(.,
-                                        function(x)
-                                          x[["term"]], "char"
-             )
-             )
-    )
+  coefs <- coefs |> split(~term)
+  names(coefs) <- vapply(names(coefs), \(x) gsub("[ .()>]", "", x), "char")
 
   purrr::lmap(coefs,
-              function(x)
-                setNames(list(format_coef(names(x), coefs, statistic_name)),
-                         names(x)
-                         )
+              \(x)
+              format_coef(names(x), coefs, statistic_name) |>
+                list() |>
+                setNames(names(x))
               )
 }
 
@@ -64,17 +55,16 @@ enlist_coefs <- function(mdl, correct = NA){
 .adjust_pvals <- function(coefs, correct_groups) {
   dplyr::mutate(coefs,
                 rownum = dplyr::row_number(),
-                cgrp = .set_cgrp(correct_groups, term)) %>%
-    dplyr::group_by(cgrp) %>%
-    dplyr::group_split() %>%
+                cgrp = .set_cgrp(correct_groups, term)) |>
+    split(~cgrp) |>
     lapply(
       function(xdf){
         if (xdf[["cgrp"]][[1L]] == "") return(xdf)
         dplyr::mutate(xdf,
                p.value = p.adjust(p.value))
       }
-    ) %>%
-    dplyr::bind_rows() %>%
-    dplyr::arrange(rownum) %>%
+    ) |>
+    dplyr::bind_rows() |>
+    dplyr::arrange(rownum) |>
     dplyr::select(-rownum, -cgrp)
 }

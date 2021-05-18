@@ -28,14 +28,14 @@ summary_as_tex <- function(model, correct=NA, statistic = "$z$", caption = NA, l
 
   coefs <- broom::tidy(model)
 
-  if(any(!is.na(correct)))
+  if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
 
-  coefs %>%
+  coefs |>
     dplyr::mutate(p.value = scales::pvalue(p.value),
-                  term = gsub("_","\\\\_",term)) %>%
-    dplyr::filter(is.na(group)) %>% # note this will cause issues for non mixed models
-    dplyr::select(-effect, -group) %>%
+                  term = gsub("_","\\\\_",term)) |>
+    dplyr::filter(is.na(group)) |> # note this will cause issues for non mixed models
+    dplyr::select(-effect, -group) |>
     knitr::kable(digits = c(0,2,2,2,3),
                  col.names = c("Term",
                                "Estimate",
@@ -64,17 +64,17 @@ summary_as_tex <- function(model, correct=NA, statistic = "$z$", caption = NA, l
 
   coefs <- broom::tidy(model)
 
-  if(any(!is.na(correct)))
+  if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
 
-  coefs %>%
+  coefs |>
     dplyr::mutate(p.value = scales::pvalue(p.value),
                   term = gsub("_","\\\\_",term),
                   term = ifelse(coef.type == 'intercept',
                                 paste0("$\\theta_{",term,"}$"),
                                 term)
-    ) %>%
-    dplyr::select(-coef.type) %>%
+    ) |>
+    dplyr::select(-coef.type) |>
     knitr::kable(digits = c(0,2,2,2,0),
                  col.names = c("Term",
                                "Estimate",

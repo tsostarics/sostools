@@ -38,9 +38,9 @@ test_propodds <- function(ord_data, model_formula) {
 
   # Check if confidence intervals are far from the mean for each term
   propodds_checks <-
-    results %>%
-    dplyr::filter(term %in% term_names) %>%
-    dplyr::group_by(term) %>%
+    results |>
+    dplyr::filter(term %in% term_names) |>
+    dplyr::group_by(term) |>
     dplyr::mutate(mn = mean(estimate),
                   check = ifelse(ci_low > mn | ci_high < mn, 1, 0))
   n_fail <- sum(propodds_checks$check)
@@ -57,6 +57,7 @@ test_propodds <- function(ord_data, model_formula) {
 }
 
 .run_single_glm <- function(ord_data, mdl_fx, coef_fx, model_formula, response_var, j) {
+  # Recode values below threshold to 1, above threshold to 0, update model formula
   new_data <- mutate(ord_data, j_response = as.numeric(scale_response <= j))
   model_formula[[2L]] <- "j_response"
   glm_formula <- formula(paste(model_formula[[2L]],"~",model_formula[[3L]]))
@@ -80,11 +81,11 @@ test_propodds <- function(ord_data, model_formula) {
 #' @export
 plot_propodds <- function(propodds_results, resp_var = "scale_response") {
   requireNamespace("ggplot2", quietly = TRUE)
-  propodds_results %>%
-    filter(term != '(Intercept)') %>%
-    dplyr::group_by(term) %>%
+  propodds_results |>
+    filter(term != '(Intercept)') |>
+    dplyr::group_by(term) |>
     dplyr::mutate(mn = mean(estimate),
-                  check = ifelse(ci_low > mn | ci_high < mn, "red", "black")) %>%
+                  check = ifelse(ci_low > mn | ci_high < mn, "red", "black")) |>
     ggplot2::ggplot(aes(x = scale_response, y = estimate, ymax = ci_high, ymin = ci_low, color = I(check))) +
     ggplot2::geom_point() +
     ggplot2::geom_errorbar() +
