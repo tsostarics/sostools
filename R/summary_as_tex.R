@@ -21,12 +21,17 @@ summary_as_tex <- function(model, correct=NA, statistic = "$z$", caption = NA, l
   if (class(model) == "clmm")
     return(.summary_as_tex.clmm(model, correct, statistic, caption, label))
 
+  if (class(model) %in% c('lmerMod','glmerMod'))
+    tidy_fx <- broom.mixed::tidy
+  else
+    tidy_fx <- broom::tidy
+
   if (knitr::is_html_output())
     outformat  <-  "pipe"
   else
     outformat <- "latex"
 
-  coefs <- broom::tidy(model)
+  coefs <- tidy_fx(model)
 
   if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
