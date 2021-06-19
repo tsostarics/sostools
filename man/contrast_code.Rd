@@ -2,25 +2,25 @@
 % Please edit documentation in R/contrast_code.R
 \name{contrast_code}
 \alias{contrast_code}
-\title{Contrast Code with Labels}
+\title{Contrast code factors}
 \usage{
-contrast_code(factor_col, coding_matrix = NA)
+contrast_code(factor_col, code_by = NA, ...)
 }
 \arguments{
 \item{factor_col}{The factor column to use, eg data$gender}
 
-\item{coding_matrix}{The matrix you want to use, obligatory if n factors > 2}
+\item{code_by}{Either a matrix or a function}
+
+\item{...}{Additional arguments to be passed to functional_code, specifically,
+which level you want the reference level to be}
 }
 \value{
-A matrix for contrast coding schemes
+A contrast coding matrix with labels and proper reference level
 }
 \description{
-This makes it easier to add contrast coding schemes while retaining the
-labels of the levels IN THE ORDER THEY APPEAR IN THE ORIGINAL CONTRAST
-SCHEME. Usually in alphabetical order. Will default to scaled sum coding
-for 2 level factors with first alphabetically as the reference level. If
-it's greater than 2 levels you MUST provide your own matrix using the matrix
-function. If you choose to change the reference level, this will rename the
-comparison labels (the column names in the matrix) accordingly. If you use
-polynomial coding the correct comparison labels will also be used.
+Helper to do contrast coding. There are two options:
+ - Manually specify a matrix for code_by (implements manual_code). Reference level
+ is automatically set to the row that's always negative.
+ - Specify a style of contrast coding as a function (implements functional_code).
+ Label of the reference level should be specified in ...
 }
