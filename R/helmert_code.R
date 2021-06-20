@@ -13,7 +13,7 @@
 #' @return Contrast matrix
 #' @export
 reverse_helmert_code <- function(n_levels){
-  apply(contr.helmert(n_levels), 2L, function(x) x / sum(x != 0))
+  apply(unname(contr.helmert(n_levels)), 2L, function(x) x / sum(x != 0))
 }
 
 #' Helmert code

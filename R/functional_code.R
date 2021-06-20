@@ -6,14 +6,16 @@
 #' the first label in dimnames of the original contrasts
 #'
 #' @export
+#' @importFrom stats contr.helmert contr.poly
 functional_code <- function(factor_col, coding_fx, reference_level) {
   labels <- dimnames(contrasts(factor_col))
-
+  reference_i <- NA
   if (missing(reference_level))
-    if (.check_non_references(coding_fx))
+    reference_i <- which(labels[[1L]]==labels[[1L]][1L])
+  else
+    reference_i <- which(labels[[1L]] == reference_level)
+  if (.check_non_references(coding_fx))
       reference_i <- NA
-    else
-      reference_i <- which(labels[[1L]]==labels[[1L]][1L])
 
   if(identical(reference_i, integer(0)))
     stop("Reference level not found in contrast dimension names")
@@ -31,7 +33,8 @@ functional_code <- function(factor_col, coding_fx, reference_level) {
     vapply(c(backward_difference_code,
            forward_difference_code,
            helmert_code,
-           reverse_helmert_code),
+           reverse_helmert_code,
+           contr.poly),
          function(x)
            identical(coding_fx, x),
          TRUE)

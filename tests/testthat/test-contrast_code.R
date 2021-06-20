@@ -73,3 +73,24 @@ test_that("polynomial coding works", {
 
   expect_equal(colnames(contrast_code(tst_data$four, contr.poly(4))), c(".L",".Q",".C"))
 })
+
+test_that("four level functional coding work", {
+  tst_data <-
+    tibble::tribble(
+      ~two, ~three, ~four,
+      "a",    "a",   "a",
+      "b",    "b",   "b",
+      "a",    "c",   "c",
+      "b",    "a",   "d"
+    ) %>%
+    dplyr::mutate(dplyr::across(tidyselect::everything(), factor))
+
+  expect_equal(functional_code(tst_data$four, contr.poly),
+               contrast_code(tst_data$four, contr.poly))
+  expect_equal(contrast_code(tst_data$four, contr.poly(4)),
+               manual_code(tst_data$four, contr.poly(4)))
+  expect_equal(functional_code(tst_data$four, scaled_sum_code),
+               contrast_code(tst_data$four, scaled_sum_code))
+  expect_equal(contrast_code(tst_data$four, scaled_sum_code(4)),
+               manual_code(tst_data$four, scaled_sum_code(4)))
+})

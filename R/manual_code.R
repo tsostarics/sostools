@@ -27,12 +27,13 @@ manual_code <- function(factor_col, coding_matrix = NA) {
 }
 
 .reset_comparison_labels <- function(contr_mat) {
+  n_levels <- nrow(contr_mat)
   if (.check_polynomial(contr_mat))
-    colnames(contr_mat) <- contr_mat |> nrow() |> contr.poly() |> colnames()
-  else if (.check_backward_difference(contr_mat))
-    colnames(contr_mat) <- paste(rownames(contr_mat)[-1], rownames(contr_mat)[-nrow(contr_mat)], sep = "-")
-  else if (.check_forward_difference(contr_mat))
-    colnames(contr_mat) <- paste(rownames(contr_mat)[-nrow(contr_mat)], rownames(contr_mat)[-1], sep = "-")
+    colnames(contr_mat) <- colnames(contr.poly(n_levels))
+  else if (n_levels != 2 & .check_backward_difference(contr_mat))
+      colnames(contr_mat) <- paste(rownames(contr_mat)[-1], rownames(contr_mat)[-n_levels], sep = "-")
+  else if (n_levels != 2 & .check_forward_difference(contr_mat))
+      colnames(contr_mat) <- paste(rownames(contr_mat)[-n_levels], rownames(contr_mat)[-1], sep = "-")
   else
     colnames(contr_mat) <-
       unname(apply(contr_mat, 2, \(x) rownames(contr_mat)[x > 0]))

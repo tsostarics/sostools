@@ -15,6 +15,8 @@
   contrast_matrix[n_levels,] <- as.matrix(contrast_matrix[reference,])
   contrast_matrix[reference,] <- reference_row
   comparison_order <- seq_len(n_levels-1)
-  comparison_order <- c(comparison_order[comparison_order != reference], reference)
+  if (n_levels != 2) # Avoid dimension length issues with n=2
+    comparison_order <- c(comparison_order[comparison_order != reference], reference)
+
   as.matrix(contrast_matrix[,comparison_order])
 }
