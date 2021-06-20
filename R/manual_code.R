@@ -29,6 +29,10 @@ manual_code <- function(factor_col, coding_matrix = NA) {
 .reset_comparison_labels <- function(contr_mat) {
   if (.check_polynomial(contr_mat))
     colnames(contr_mat) <- contr_mat |> nrow() |> contr.poly() |> colnames()
+  else if (.check_backward_difference(contr_mat))
+    colnames(contr_mat) <- paste(rownames(contr_mat)[-1], rownames(contr_mat)[-nrow(contr_mat)], sep = "-")
+  else if (.check_forward_difference(contr_mat))
+    colnames(contr_mat) <- paste(rownames(contr_mat)[-nrow(contr_mat)], rownames(contr_mat)[-1], sep = "-")
   else
     colnames(contr_mat) <-
       unname(apply(contr_mat, 2, \(x) rownames(contr_mat)[x > 0]))
@@ -39,4 +43,12 @@ manual_code <- function(factor_col, coding_matrix = NA) {
 .check_polynomial <- function(contr_mat) {
   check_val <- round(contr.poly(nrow(contr_mat))[1], 3)
   check_val %in% round(contr_mat, 3)
+}
+
+.check_forward_difference <- function(contr_mat) {
+  all(contr_mat[upper.tri(contr_mat, TRUE)] > 0) & all(contr_mat[lower.tri(contr_mat)] < 0)
+}
+
+.check_backward_difference <- function(contr_mat) {
+  all(contr_mat[upper.tri(contr_mat, TRUE)] < 0) & all(contr_mat[lower.tri(contr_mat)] > 0)
 }
