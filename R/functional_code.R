@@ -6,7 +6,7 @@
 #' the first label in dimnames of the original contrasts
 #'
 #' @export
-#' @importFrom stats contr.helmert contr.poly
+#' @importFrom stats contr.helmert contr.poly contr.treatment
 functional_code <- function(factor_col, coding_fx, reference_level) {
   labels <- dimnames(contrasts(factor_col))
   reference_i <- NA

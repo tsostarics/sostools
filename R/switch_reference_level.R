@@ -3,8 +3,9 @@
 #' Switch rows to set the reference level properly
 #'
 #' @param contrast_matrix Contrast matrix, unlabeled
-#' @param n_levels Number of levels in the factor
-#' @param reference Which row to use as the reference level
+#' @param coding_fx function used to generate contrasts, used to check for treatment coding
+#' @param old_reference Usually number of levels in the factor
+#' @param new_reference Which row to use as the reference level
 #'
 #' @return A matrix with the correct values for the reference level
 #' @export

@@ -4,14 +4,21 @@
 \alias{.switch_reference_level}
 \title{Switch reference level in contrast matrix}
 \usage{
-.switch_reference_level(contrast_matrix, n_levels, reference)
+.switch_reference_level(
+  contrast_matrix,
+  coding_fx,
+  old_reference,
+  new_reference
+)
 }
 \arguments{
 \item{contrast_matrix}{Contrast matrix, unlabeled}
 
-\item{n_levels}{Number of levels in the factor}
+\item{coding_fx}{function used to generate contrasts, used to check for treatment coding}
 
-\item{reference}{Which row to use as the reference level}
+\item{old_reference}{Usually number of levels in the factor}
+
+\item{new_reference}{Which row to use as the reference level}
 }
 \value{
 A matrix with the correct values for the reference level
