@@ -57,7 +57,8 @@ You could say something like: We found no significant effect of cylinder
 between the two `r get_coef2("cyl:gear")`.
 
 ## Retain contrast coding labels
-
+Here's a test data set with some factors that we might want to apply
+particular contrasts to.
 ```{r}
 mdl_data <- 
   mtcars %>% 
@@ -69,8 +70,13 @@ mdl_data <-
 contrasts(mdl_data$cyl) # 3 level treatment coding
 contrasts(mdl_data$twolevel) # 2 level treatment coding
 contrast_code(mdl_data$twolevel) # 2 level scaled sum coding
+```
 
-# note the matrix orientation for 3 level scaled sum coding
+First, we can specify the contrast matrix manually using `contrast_code()`
+or `manual_code()`. The former will invoke the latter if it detects a matrix.
+
+```{r}
+# You can specify contrast matrix manually
 contrasts(mdl_data$cyl) <- contrast_code(mdl_data$cyl,
                                         matrix(c(2/3, -1/3, -1/3,
                                                  -1/3, -1/3, 2/3),
@@ -82,5 +88,25 @@ contrasts(mdl_data$cyl)
 
 # also works for polynomial coding
 contrast_code(mdl_data$cyl, contr.poly(3))
+```
+
+Because manually specifying matrices is time consuming for some common contrast
+schemes, you can also pass a function that generates contrasts to `contrast_code()` 
+which will invoke `functional_code()`. A series of helpers are included in this
+package, but they also work with R's built in `contr.___` functions. When
+applicable with sum and dummy coding, you can pass in a desired reference level.
+Coding schemes that require a specific level order, such as forward/backward
+difference or helmert coding, should be set before applying contrasts.
+```{r}
+contrast_code(mdl_data$cyl, scaled_sum_code)
+contrast_code(mdl_data$cyl, scaled_sum_code, reference = "6")
+contrast_code(mdl_data$cyl, forward_difference_code)
+contrast_code(mdl_data$cyl, backward_difference_code)
+contrast_code(mdl_data$cyl, helmert_code)
+contrast_code(mdl_data$cyl, reverse_helmert_code)
+contrast_code(mdl_data$cyl, contr.poly)
+contrast_code(mdl_data$cyl, contr.sum)
+contrast_code(mdl_data$cyl, contr.treatment)
+contrast_code(mdl_data$cyl, contr.treatment, reference = "6")
 ```
 

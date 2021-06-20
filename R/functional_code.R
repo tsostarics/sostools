@@ -22,7 +22,10 @@ functional_code <- function(factor_col, coding_fx, reference_level) {
 
   n_levels <- length(labels[[1L]])
 
-  new_contrasts <- .switch_reference_level(coding_fx(n_levels), n_levels, reference_i)
+  new_contrasts <- .switch_reference_level(coding_fx(n_levels),
+                                           coding_fx,
+                                           n_levels,
+                                           reference_i)
 
   dimnames(new_contrasts) <- labels
   .reset_comparison_labels(new_contrasts)
