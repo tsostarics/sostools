@@ -10,7 +10,7 @@
 #' @return A matrix with the correct values for the reference level
 #' @export
 .switch_reference_level <- function(contrast_matrix, coding_fx, old_reference, new_reference){
-  if (is.na(new_reference))
+  if (is.na(new_reference) | new_reference == old_reference)
     return(contrast_matrix)
   if (identical(coding_fx, contr.treatment))
     old_reference <- 1L
