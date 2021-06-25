@@ -4,7 +4,7 @@
 \alias{functional_code}
 \title{Set contrast coding with function}
 \usage{
-functional_code(factor_col, coding_fx, reference_level)
+functional_code(factor_col, coding_fx, reference_level = NA)
 }
 \arguments{
 \item{factor_col}{Factor column}
