@@ -42,4 +42,7 @@ enlist_contrasts(my_df,
     gear ~ matrix(c(1,-1,0,0,-1,1), nrow = 3),
     carb ~ forward_difference_code)
 
+# Will inform you if there are factors you didn't set
+enlist_contrasts(my_df,
+    gear ~ scaled_sum_code)
 }

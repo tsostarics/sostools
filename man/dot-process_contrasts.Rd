@@ -2,7 +2,7 @@
 % Please edit documentation in R/enlist_contrasts.R
 \name{.process_contrasts}
 \alias{.process_contrasts}
-\title{Create contrast code call from formula}
+\title{Pass arguments to contrast code}
 \usage{
 .process_contrasts(model_data, char_formula)
 }
