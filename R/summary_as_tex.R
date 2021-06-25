@@ -21,10 +21,7 @@ summary_as_tex <- function(model, correct=NA, statistic = "$z$", caption = NA, l
   if (class(model) == "clmm")
     return(.summary_as_tex.clmm(model, correct, statistic, caption, label))
 
-  if (class(model) %in% c('lmerMod','glmerMod'))
-    tidy_fx <- broom.mixed::tidy
-  else
-    tidy_fx <- broom::tidy
+  tidy_fx <- .get_tidy_fx(model)
 
   if (knitr::is_html_output())
     outformat  <-  "pipe"
@@ -67,7 +64,7 @@ summary_as_tex <- function(model, correct=NA, statistic = "$z$", caption = NA, l
   else
     outformat <- "latex"
 
-  coefs <- broom::tidy(model)
+  coefs <- broom::tidy(model) # might need to change
 
   if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
@@ -124,3 +121,10 @@ addlinespace <- function(table, terms) {
   latex_table
 }
 
+
+.get_tidy_fx <- function(model) {
+  if (class(model) %in% c('lmerMod','glmerMod'))
+    return(broom.mixed::tidy)
+
+  return(broom::tidy)
+}
