@@ -11,11 +11,13 @@
 #'
 #' @examples
 #' enlist_coefs(lm(mpg~cyl, data = mtcars))
-enlist_coefs <- function(mdl, correct = NA){
+enlist_coefs <- function(model, correct = NA){
+
+  tidy_fx <- .get_tidy_fx(model)
 
   coefs <-
-    mdl |>
-    broom::tidy() |>
+    model |>
+    tidy_fx() |>
     dplyr::mutate(dplyr::across(estimate:statistic, function(x) round(x,2)))
 
   # Remove coef type column from clmm models
@@ -28,7 +30,7 @@ enlist_coefs <- function(mdl, correct = NA){
   if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
 
-  statistic_name <- colnames(summary(mdl)$coefficients)[[3L]]
+  statistic_name <- colnames(summary(model)$coefficients)[[3L]]
 
   # Split into list
   coefs <- coefs |> split(~term)
