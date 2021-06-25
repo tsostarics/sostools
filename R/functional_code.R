@@ -7,10 +7,10 @@
 #'
 #' @export
 #' @importFrom stats contr.helmert contr.poly contr.treatment
-functional_code <- function(factor_col, coding_fx, reference_level) {
+functional_code <- function(factor_col, coding_fx, reference_level=NA) {
   labels <- dimnames(contrasts(factor_col))
   reference_i <- NA
-  if (missing(reference_level))
+  if (is.na(reference_level))
     reference_i <- which(labels[[1L]]==labels[[1L]][1L])
   else
     reference_i <- which(labels[[1L]] == reference_level)
