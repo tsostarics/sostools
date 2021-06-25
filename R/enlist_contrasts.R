@@ -49,7 +49,7 @@ enlist_contrasts <- function(model_data, ...) {
   )
 }
 
-#' Create contrast code call from formula
+#' Pass arguments to contrast code
 #'
 #' Helper to generate contrast matrix from passed formulas in enlist_contrasts
 #'
@@ -60,12 +60,10 @@ enlist_contrasts <- function(model_data, ...) {
 .process_contrasts <- function(model_data, char_formula) {
   coding_scheme <- strsplit(char_formula[[3L]], " + ", fixed = TRUE)[[1L]]
 
-  generated_call <-
-    list(contrast_code,
-         factor_col = model_data[[char_formula[[2L]]]],
-         code_by = eval(parse(text = coding_scheme[[1L]])),
-         reference_level = ifelse(length(coding_scheme) == 2, coding_scheme[[2]], NA)
-    )
+  contrast_code(
+    factor_col = model_data[[char_formula[[2L]]]],
+    code_by = eval(parse(text = coding_scheme[[1L]])),
+    reference_level = ifelse(length(coding_scheme) == 2, coding_scheme[[2]], NA)
+  )
 
-  eval(as.call(generated_call))
 }
