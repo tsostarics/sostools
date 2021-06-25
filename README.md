@@ -51,6 +51,9 @@ significant interaction between the two
 
 ## Retain contrast coding labels
 
+Here’s a test data set with some factors that we might want to apply
+particular contrasts to.
+
 ``` r
 mdl_data <- 
   mtcars %>% 
@@ -72,8 +75,14 @@ contrast_code(mdl_data$twolevel) # 2 level scaled sum coding
 #>      b
 #> a -0.5
 #> b  0.5
+```
 
-# note the matrix orientation for 3 level scaled sum coding
+First, we can specify the contrast matrix manually using
+`contrast_code()` or `manual_code()`. The former will invoke the latter
+if it detects a matrix.
+
+``` r
+# You can specify contrast matrix manually
 contrasts(mdl_data$cyl) <- contrast_code(mdl_data$cyl,
                                         matrix(c(2/3, -1/3, -1/3,
                                                  -1/3, -1/3, 2/3),
@@ -93,4 +102,66 @@ contrast_code(mdl_data$cyl, contr.poly(3))
 #> 4 -7.071068e-01  0.4082483
 #> 6 -7.850462e-17 -0.8164966
 #> 8  7.071068e-01  0.4082483
+```
+
+Because manually specifying matrices is time consuming for some common
+contrast schemes, you can also pass a function that generates contrasts
+to `contrast_code()` which will invoke `functional_code()`. A series of
+helpers are included in this package, but they also work with R’s built
+in `contr.___` functions. When applicable with sum and dummy coding, you
+can pass in a desired reference level. Coding schemes that require a
+specific level order, such as forward/backward difference or helmert
+coding, should be set before applying contrasts.
+
+``` r
+contrast_code(mdl_data$cyl, scaled_sum_code)
+#>            6          8
+#> 4 -0.3333333 -0.3333333
+#> 6  0.6666667 -0.3333333
+#> 8 -0.3333333  0.6666667
+contrast_code(mdl_data$cyl, scaled_sum_code, reference = "6")
+#>            4          8
+#> 4  0.6666667 -0.3333333
+#> 6 -0.3333333 -0.3333333
+#> 8 -0.3333333  0.6666667
+contrast_code(mdl_data$cyl, forward_difference_code)
+#>          4-6        6-8
+#> 4  0.6666667  0.3333333
+#> 6 -0.3333333  0.3333333
+#> 8 -0.3333333 -0.6666667
+contrast_code(mdl_data$cyl, backward_difference_code)
+#>          6-4        8-6
+#> 4 -0.6666667 -0.3333333
+#> 6  0.3333333 -0.3333333
+#> 8  0.3333333  0.6666667
+contrast_code(mdl_data$cyl, helmert_code)
+#>            4    6
+#> 4  0.6666667  0.0
+#> 6 -0.3333333  0.5
+#> 8 -0.3333333 -0.5
+contrast_code(mdl_data$cyl, reverse_helmert_code)
+#>      6          8
+#> 4 -0.5 -0.3333333
+#> 6  0.5 -0.3333333
+#> 8  0.0  0.6666667
+contrast_code(mdl_data$cyl, contr.poly)
+#>              .L         .Q
+#> 4 -7.071068e-01  0.4082483
+#> 6 -7.850462e-17 -0.8164966
+#> 8  7.071068e-01  0.4082483
+contrast_code(mdl_data$cyl, contr.sum)
+#>    6  8
+#> 4 -1 -1
+#> 6  1  0
+#> 8  0  1
+contrast_code(mdl_data$cyl, contr.treatment)
+#>   6 8
+#> 4 0 0
+#> 6 1 0
+#> 8 0 1
+contrast_code(mdl_data$cyl, contr.treatment, reference = "6")
+#>   4 8
+#> 4 1 0
+#> 6 0 0
+#> 8 0 1
 ```

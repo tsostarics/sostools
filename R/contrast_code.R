@@ -1,48 +1,24 @@
-#' Contrast Code with Labels
+#' Contrast code factors
 #'
-#' This makes it easier to add contrast coding schemes while retaining the
-#' labels of the levels IN THE ORDER THEY APPEAR IN THE ORIGINAL CONTRAST
-#' SCHEME. Usually in alphabetical order. Will default to scaled sum coding
-#' for 2 level factors with first alphabetically as the reference level. If
-#' it's greater than 2 levels you MUST provide your own matrix using the matrix
-#' function. If you choose to change the reference level, this will rename the
-#' comparison labels (the column names in the matrix) accordingly. If you use
-#' polynomial coding the correct comparison labels will also be used.
+#' Helper to do contrast coding. There are two options:
+#'  - Manually specify a matrix for code_by (implements manual_code). Reference level
+#'  is automatically set to the row that's always negative.
+#'  - Specify a style of contrast coding as a function (implements functional_code).
+#'  Label of the reference level should be specified in ...
 #'
 #' @param factor_col The factor column to use, eg data$gender
-#' @param coding_matrix The matrix you want to use, obligatory if n factors > 2
+#' @param code_by Either a matrix or a function
+#' @param ... Additional arguments to be passed to functional_code, specifically,
+#' which level you want the reference level to be
 #'
-#' @return A matrix for contrast coding schemes
+#' @return A contrast coding matrix with labels and proper reference level
 #' @export
-#'
-#' @importFrom stats contr.sum contrasts
-contrast_code <- function(factor_col, coding_matrix = NA) {
-  if (any(is.na(coding_matrix)) & length(levels(factor_col)) > 2) {
-    stop("This factor has more than 2 levels, please provide a matrix.")
-  }
-
-  labels <- dimnames(contrasts(factor_col))
-  if (!any(is.na(coding_matrix))) {
-    new_contrasts <- coding_matrix
-  } else {
-    new_contrasts <- -contr.sum(2) / 2
-  }
-
-  dimnames(new_contrasts) <- labels
-  .reset_comparison_labels(new_contrasts)
-}
-
-.reset_comparison_labels <- function(contr_mat) {
-  if (.check_polynomial(contr_mat))
-    colnames(contr_mat) <- contr_mat |> nrow() |> contr.poly() |> colnames()
-  else
-    colnames(contr_mat) <-
-      unname(apply(contr_mat, 2, \(x) rownames(contr_mat)[x > 0]))
-
-  contr_mat
-}
-
-.check_polynomial <- function(contr_mat) {
-  check_val <- round(contr.poly(nrow(contr_mat))[1], 3)
-  check_val %in% round(contr_mat, 3)
+contrast_code <- function(factor_col, code_by=NA, ...) {
+  if (is.matrix(code_by))
+    return(manual_code(factor_col, code_by))
+  if (is.function(code_by))
+    return(functional_code(factor_col, code_by, ...))
+  if (length(contrasts(factor_col)) == 2)
+    return(manual_code(factor_col))
+  stop("Invalid value for code_by, must be a matrix or coding function")
 }

@@ -60,7 +60,7 @@ test_propodds <- function(ord_data, model_formula) {
   # Recode values below threshold to 1, above threshold to 0, update model formula
   new_data <- mutate(ord_data, j_response = as.numeric(scale_response <= j))
   model_formula[[2L]] <- "j_response"
-  glm_formula <- formula(paste(model_formula[[2L]],"~",model_formula[[3L]]))
+  glm_formula <- stats::formula(paste(model_formula[[2L]],"~",model_formula[[3L]]))
   mdl <- mdl_fx(glm_formula, family = "binomial", data = new_data)
   ci <- stats::confint(mdl, method = "Wald",level = .99)
   ci <- ci[!is.na(ci[,1]),] # remove any random effects
@@ -82,7 +82,7 @@ test_propodds <- function(ord_data, model_formula) {
 plot_propodds <- function(propodds_results, resp_var = "scale_response") {
   requireNamespace("ggplot2", quietly = TRUE)
   propodds_results |>
-    filter(term != '(Intercept)') |>
+    dplyr::filter(term != '(Intercept)') |>
     dplyr::group_by(term) |>
     dplyr::mutate(mn = mean(estimate),
                   check = ifelse(ci_low > mn | ci_high < mn, "red", "black")) |>
