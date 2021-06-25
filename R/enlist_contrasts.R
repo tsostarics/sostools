@@ -33,11 +33,16 @@
 #'     gear ~ matrix(c(1,-1,0,0,-1,1), nrow = 3),
 #'     carb ~ forward_difference_code)
 #'
+#' # Will inform you if there are factors you didn't set
+#' enlist_contrasts(my_df,
+#'     gear ~ scaled_sum_code)
 enlist_contrasts <- function(model_data, ...) {
   formulas <- lapply(rlang::enexprs(...), as.character)
 
   vars_in_model <- vapply(formulas, function(x) x[[2L]] %in% names(model_data), TRUE)
   names(vars_in_model) <- vapply(formulas, function(x) x[[2L]], "char")
+
+  .check_remaining_factors(model_data, names(vars_in_model))
 
   if (!all(vars_in_model))
     stop(glue::glue("{names(vars_in_model)[!vars_in_model]} not found in model data\n",
@@ -65,5 +70,17 @@ enlist_contrasts <- function(model_data, ...) {
     code_by = eval(parse(text = coding_scheme[[1L]])),
     reference_level = ifelse(length(coding_scheme) == 2, coding_scheme[[2]], NA)
   )
+
+}
+
+.check_remaining_factors <- function(model_data, specified_vars) {
+  column_classes <- lapply(model_data, class)
+  factor_cols <- column_classes == "factor"
+  factor_cols <- factor_cols[factor_cols]
+  col_names <- names(factor_cols)[factor_cols]
+
+  remaining_factors <- factor_cols[!col_names %in% specified_vars]
+  if (any(remaining_factors))
+    message(paste0("You didn't set these factors, expect dummy coding: ", paste(names(remaining_factors), collapse = ", ")))
 
 }
