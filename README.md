@@ -197,27 +197,27 @@ summary(my_model)
 #> 
 #> Residuals:
 #>    Min     1Q Median     3Q    Max 
-#> -5.711 -1.637 -0.054  1.588  5.655 
+#> -5.490 -1.595 -0.105  1.788  5.430 
 #> 
 #> Coefficients:
 #>             Estimate Std. Error t value Pr(>|t|)    
-#> (Intercept)  19.8407     0.9239  21.474    9e-16 ***
-#> cyl4          1.9165     1.6663   1.150  0.26302    
-#> cyl8         -1.6445     1.7089  -0.962  0.34686    
-#> twolevelb     0.2657     1.1892   0.223  0.82535    
-#> gear3-4      -5.6667     2.4075  -2.354  0.02840 *  
-#> gear4-5      -0.8306     2.1403  -0.388  0.70188    
-#> carb2        -2.4528     1.8404  -1.333  0.19690    
-#> carb3        -1.5794     2.4331  -0.649  0.52328    
-#> carb4        -5.0726     1.7511  -2.897  0.00863 ** 
-#> carb6        -4.1659     4.0471  -1.029  0.31503    
-#> carb8        -6.9260     4.2697  -1.622  0.11970    
+#> (Intercept)  19.8333     0.9248  21.446 9.25e-16 ***
+#> cyl4          1.9267     1.6663   1.156  0.26056    
+#> cyl8         -1.6233     1.7292  -0.939  0.35852    
+#> twolevelb    -0.1800     1.1919  -0.151  0.88140    
+#> gear3-4      -5.6300     2.4017  -2.344  0.02898 *  
+#> gear4-5      -0.7700     2.1634  -0.356  0.72544    
+#> carb2        -2.4800     1.8486  -1.342  0.19407    
+#> carb3        -1.6300     2.4158  -0.675  0.50722    
+#> carb4        -5.0467     1.7478  -2.888  0.00881 ** 
+#> carb6        -4.0850     4.1562  -0.983  0.33686    
+#> carb8        -6.8280     4.2390  -1.611  0.12216    
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
-#> Residual standard error: 3.117 on 21 degrees of freedom
-#> Multiple R-squared:  0.8188, Adjusted R-squared:  0.7326 
-#> F-statistic: 9.491 on 10 and 21 DF,  p-value: 9.24e-06
+#> Residual standard error: 3.119 on 21 degrees of freedom
+#> Multiple R-squared:  0.8186, Adjusted R-squared:  0.7322 
+#> F-statistic: 9.476 on 10 and 21 DF,  p-value: 9.356e-06
 ```
 
 And we can always check what the contrasts are. Here I use `fractions`
@@ -254,8 +254,7 @@ lapply(my_contrasts, function(x) MASS::fractions(x))
 ```
 
 This function also gives you a message if you have factor columns that
-you didn’t set the contrasts for. Note how I commented 3 lines out
-below.
+you didn’t set the contrasts for.
 
 ``` r
 enlist_contrasts(mdl_data, carb ~ contr.sum)

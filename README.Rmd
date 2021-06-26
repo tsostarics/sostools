@@ -143,7 +143,7 @@ lapply(my_contrasts, function(x) MASS::fractions(x))
 ```
 
 This function also gives you a message if you have factor columns that you didn't
-set the contrasts for. Note how I commented 3 lines out below.
+set the contrasts for.
 
 ```{r, message = TRUE}
 enlist_contrasts(mdl_data, carb ~ contr.sum)
