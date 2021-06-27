@@ -21,4 +21,27 @@ change in factor level.
 Reverse helmert coding compares each level to the total mean of all levels
 that have come before it. Differs from backward difference coding, which
 compares only pairs of levels (not a level to a cumulative mean of levels)
+
+Example interpretation for a 4 level factor:
+Intercept = Grand mean (mean of the means of each level)
+grp2 = mean(grp2) - mean(grp1)
+grp3 = mean(grp3) - mean(grp1, grp2)
+grp4 = mean(grp4) - mean(grp1, grp2, grp3)
+}
+\examples{
+
+mydf <- data.frame(
+   grp = factor(c(rep("F1",5),rep("F2",5),rep("F3",5),rep("F4",5))),
+   resp = c(seq(1,5), seq(5,9), seq(10,14), seq(15,19))
+)
+
+mydf \%>\%
+  dplyr::group_by(grp) \%>\%
+  dplyr::summarize(mu = mean(resp)) \%>\%
+  dplyr::ungroup() \%>\%
+  dplyr::mutate(grand_mean = mean(mu))
+
+summary(lm(resp ~ grp,
+           data = mydf,
+           contrasts = enlist_contrasts(mydf, grp ~ reverse_helmert_code)))
 }

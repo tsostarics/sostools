@@ -81,6 +81,9 @@ enlist_contrasts <- function(model_data, ...) {
 
   remaining_factors <- factor_cols[!col_names %in% specified_vars]
   if (any(remaining_factors))
-    message(paste0("You didn't set these factors, expect dummy coding: ", paste(names(remaining_factors), collapse = ", ")))
+    message(paste0("You didn't set these factors, expect dummy coding: ",
+                   paste(names(remaining_factors), collapse = ", ")
+                   )
+            )
 
 }
