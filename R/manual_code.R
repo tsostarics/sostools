@@ -42,6 +42,10 @@ manual_code <- function(factor_col, coding_matrix = NA) {
       colnames(contr_mat) <- paste(rownames(contr_mat)[-1], rownames(contr_mat)[-n_levels], sep = "-")
   else if (n_levels != 2 & .check_forward_difference(contr_mat))
       colnames(contr_mat) <- paste(rownames(contr_mat)[-n_levels], rownames(contr_mat)[-1], sep = "-")
+  else if (n_levels != 2 & .check_reverse_helmert(contr_mat))
+      colnames(contr_mat) <- paste0("<",rownames(contr_mat)[-1L])
+  else if (n_levels != 2 & .check_helmert(contr_mat))
+    colnames(contr_mat) <- paste0(">",rownames(contr_mat)[-n_levels])
   else {
     new_colnames <- unname(apply(contr_mat, 2, \(x) rownames(contr_mat)[x > 0]))
     if (all(vapply(new_colnames, \(x) length(x) == 1, TRUE)))
@@ -61,4 +65,13 @@ manual_code <- function(factor_col, coding_matrix = NA) {
 
 .check_backward_difference <- function(contr_mat) {
   all(contr_mat[upper.tri(contr_mat, TRUE)] < 0) & all(contr_mat[lower.tri(contr_mat)] > 0)
+}
+
+.check_reverse_helmert <- function(contr_mat) {
+  all(contr_mat == reverse_helmert_code(nrow(contr_mat)))
+}
+
+
+.check_helmert <- function(contr_mat) {
+  all(contr_mat == helmert_code(nrow(contr_mat)))
 }

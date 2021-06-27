@@ -11,7 +11,7 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA) {
   labels <- dimnames(contrasts(factor_col))
   reference_i <- NA
   if (is.na(reference_level))
-    reference_i <- which(labels[[1L]]==labels[[1L]][1L])
+    reference_i <- which(labels[[1L]] == labels[[1L]][1L])
   else
     reference_i <- which(labels[[1L]] == reference_level)
   if (.check_non_references(coding_fx)) {
@@ -20,7 +20,7 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA) {
     reference_i <- NA
   }
 
-  if(identical(reference_i, integer(0)))
+  if (identical(reference_i, integer(0)))
     stop("Reference level not found in contrast dimension names")
 
   n_levels <- length(labels[[1L]])
