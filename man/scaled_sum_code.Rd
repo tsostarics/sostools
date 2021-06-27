@@ -13,7 +13,8 @@ scaled_sum_code(n_levels)
 A matrix of scaled sum coded contrasts, unlabeled
 }
 \description{
-This is also sometimes called simple or deviation coding.
+This is also sometimes called simple, sum, or deviation coding depending on
+the field and source. Use this to compare each level to a reference level.
 }
 \details{
 For n levels of factors, generate a matrix with n-1 comparisons where:

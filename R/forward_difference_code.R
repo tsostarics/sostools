@@ -2,7 +2,6 @@
 #'
 #' Compares the mean of level k to level k+1. Differs from helmert coding because
 #' it doesn't compare k to mean(k_i, ..., k_n)
-#' Intercept is the grand mean (mean of cell means)
 #'
 #' Example interpretation for a 4 level factor:
 #' \itemize{

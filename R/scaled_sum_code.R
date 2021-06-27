@@ -1,6 +1,7 @@
 #' Scaled sum coding
 #'
-#' This is also sometimes called simple or deviation coding.
+#' This is also sometimes called simple, sum, or deviation coding depending on
+#' the field and source. Use this to compare each level to a reference level.
 #'
 #' For n levels of factors, generate a matrix with n-1 comparisons where:
 #' \itemize{
@@ -55,7 +56,7 @@
 #'            contrasts = enlist_contrasts(mydf, grp ~ scaled_sum_code)))
 scaled_sum_code <- function(n_levels) {
   contrast_matrix <- contr.sum(n_levels)
-  contrast_matrix[contrast_matrix == 1] <- (n_levels-1) / n_levels
+  contrast_matrix[contrast_matrix == 1] <- (n_levels - 1) / n_levels
   contrast_matrix[contrast_matrix == 0] <- -1/n_levels
   contrast_matrix[contrast_matrix == -1] <- -1/n_levels
 
