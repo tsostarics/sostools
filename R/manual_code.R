@@ -14,17 +14,10 @@ manual_code <- function(factor_col, coding_matrix = NA) {
     stop("This factor has more than 2 levels, please provide a matrix.")
   }
 
-  # given_levels <- rownames(coding_matrix)
   given_comparisons <- colnames(coding_matrix)
   labels <- dimnames(contrasts(factor_col))
 
-  # if (!is.null(given_levels) & !all(rownames(coding_matrix) %in% labels[[1]]))
-  #   warning("Factor levels in matrix not the same as data levels, order may not be as intended")
-
   # Handling if the given matrix has prespecified comparison labels
-  # if (!is.null(given_levels))
-  #   labels[[1]] <- given_levels
-
   if (!is.null(given_comparisons))
     labels[[2]] <- given_comparisons
 
