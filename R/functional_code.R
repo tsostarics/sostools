@@ -14,8 +14,11 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA) {
     reference_i <- which(labels[[1L]]==labels[[1L]][1L])
   else
     reference_i <- which(labels[[1L]] == reference_level)
-  if (.check_non_references(coding_fx))
-      reference_i <- NA
+  if (.check_non_references(coding_fx)) {
+    if (!is.na(reference_level))
+      warning("Ignoring reference level passed for contrast scheme lacking a singular reference.")
+    reference_i <- NA
+  }
 
   if(identical(reference_i, integer(0)))
     stop("Reference level not found in contrast dimension names")
