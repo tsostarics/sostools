@@ -126,7 +126,7 @@ my_contrasts <-
                    cyl ~ contr.sum + 6, # Set the reference level with + ___
                    twolevel ~ scaled_sum_code + a, # String labels stay unquoted
                    gear ~ forward_difference_code,
-                   carb ~ reverse_helmert_code)
+                   carb ~ helmert_code)
 
 my_model <- lm(mpg ~ cyl + twolevel + gear + carb, 
                data = mdl_data,  

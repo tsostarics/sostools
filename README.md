@@ -135,12 +135,12 @@ contrast_code(mdl_data$cyl, backward_difference_code)
 #> 6  0.3333333 -0.3333333
 #> 8  0.3333333  0.6666667
 contrast_code(mdl_data$cyl, helmert_code)
-#>            4    6
+#>           >4   >6
 #> 4  0.6666667  0.0
 #> 6 -0.3333333  0.5
 #> 8 -0.3333333 -0.5
 contrast_code(mdl_data$cyl, reverse_helmert_code)
-#>      6          8
+#>     <6         <8
 #> 4 -0.5 -0.3333333
 #> 6  0.5 -0.3333333
 #> 8  0.0  0.6666667
@@ -183,7 +183,7 @@ my_contrasts <-
                    cyl ~ contr.sum + 6, # Set the reference level with + ___
                    twolevel ~ scaled_sum_code + a, # String labels stay unquoted
                    gear ~ forward_difference_code,
-                   carb ~ reverse_helmert_code)
+                   carb ~ helmert_code)
 
 my_model <- lm(mpg ~ cyl + twolevel + gear + carb, 
                data = mdl_data,  
@@ -196,28 +196,28 @@ summary(my_model)
 #>     contrasts = my_contrasts)
 #> 
 #> Residuals:
-#>    Min     1Q Median     3Q    Max 
-#> -5.490 -1.595 -0.105  1.788  5.430 
+#>     Min      1Q  Median      3Q     Max 
+#> -5.6660 -1.4794 -0.0161  1.6347  5.4340 
 #> 
 #> Coefficients:
 #>             Estimate Std. Error t value Pr(>|t|)    
-#> (Intercept)  19.8333     0.9248  21.446 9.25e-16 ***
-#> cyl4          1.9267     1.6663   1.156  0.26056    
-#> cyl8         -1.6233     1.7292  -0.939  0.35852    
-#> twolevelb    -0.1800     1.1919  -0.151  0.88140    
-#> gear3-4      -5.6300     2.4017  -2.344  0.02898 *  
-#> gear4-5      -0.7700     2.1634  -0.356  0.72544    
-#> carb2        -2.4800     1.8486  -1.342  0.19407    
-#> carb3        -1.6300     2.4158  -0.675  0.50722    
-#> carb4        -5.0467     1.7478  -2.888  0.00881 ** 
-#> carb6        -4.0850     4.1562  -0.983  0.33686    
-#> carb8        -6.8280     4.2390  -1.611  0.12216    
+#> (Intercept)  19.7447     0.9749  20.253 2.92e-15 ***
+#> cyl4          1.9369     1.6632   1.165   0.2573    
+#> cyl8         -1.6442     1.7064  -0.964   0.3463    
+#> twolevelb     0.3966     1.3420   0.296   0.7705    
+#> gear3-4      -5.6688     2.3914  -2.371   0.0274 *  
+#> gear4-5      -0.5444     2.3281  -0.234   0.8174    
+#> carb>1        5.8536     2.6542   2.205   0.0387 *  
+#> carb>2        4.4711     2.2503   1.987   0.0601 .  
+#> carb>3        5.2851     2.9857   1.770   0.0912 .  
+#> carb>4        2.0582     3.0773   0.669   0.5109    
+#> carb>6        3.3485     4.9881   0.671   0.5093    
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
-#> Residual standard error: 3.119 on 21 degrees of freedom
-#> Multiple R-squared:  0.8186, Adjusted R-squared:  0.7322 
-#> F-statistic: 9.476 on 10 and 21 DF,  p-value: 9.356e-06
+#> Residual standard error: 3.114 on 21 degrees of freedom
+#> Multiple R-squared:  0.8192, Adjusted R-squared:  0.733 
+#> F-statistic: 9.512 on 10 and 21 DF,  p-value: 9.082e-06
 ```
 
 And we can always check what the contrasts are. Here I use `fractions`
@@ -244,13 +244,13 @@ lapply(my_contrasts, function(x) MASS::fractions(x))
 #> 5 -1/3 -2/3
 #> 
 #> $carb
-#>   2    3    4    6    8   
-#> 1 -1/2 -1/3 -1/4 -1/5 -1/6
-#> 2  1/2 -1/3 -1/4 -1/5 -1/6
-#> 3    0  2/3 -1/4 -1/5 -1/6
-#> 4    0    0  3/4 -1/5 -1/6
-#> 6    0    0    0  4/5 -1/6
-#> 8    0    0    0    0  5/6
+#>   >1   >2   >3   >4   >6  
+#> 1  5/6    0    0    0    0
+#> 2 -1/6  4/5    0    0    0
+#> 3 -1/6 -1/5  3/4    0    0
+#> 4 -1/6 -1/5 -1/4  2/3    0
+#> 6 -1/6 -1/5 -1/4 -1/3  1/2
+#> 8 -1/6 -1/5 -1/4 -1/3 -1/2
 ```
 
 This function also gives you a message if you have factor columns that
