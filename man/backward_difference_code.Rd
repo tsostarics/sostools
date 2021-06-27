@@ -19,10 +19,12 @@ flipping the signs of the matrix from forward difference coding.
 }
 \details{
 Example interpretation for a 4 level factor:
-Intercept = Grand mean (mean of the means of each level)
-grp1 = mean(grp2) - mean(grp1)
-grp2 = mean(grp3) - mean(grp2)
-grp3 = mean(grp4) - mean(grp3)
+\itemize{
+\item Intercept = Grand mean (mean of the means of each level)
+\item grp1 = mean(grp2) - mean(grp1)
+\item grp2 = mean(grp3) - mean(grp2)
+\item grp3 = mean(grp4) - mean(grp3)
+}
 }
 \examples{
 mydf <- data.frame(

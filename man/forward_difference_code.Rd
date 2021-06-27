@@ -19,10 +19,12 @@ Intercept is the grand mean (mean of cell means)
 }
 \details{
 Example interpretation for a 4 level factor:
-Intercept = Grand mean (mean of the means of each level)
-grp1 = mean(grp1) - mean(grp2)
-grp2 = mean(grp2) - mean(grp3)
-grp3 = mean(grp3) - mean(grp4)
+\itemize{
+\item Intercept = Grand mean (mean of the means of each level)
+\item grp1 = mean(grp1) - mean(grp2)
+\item grp2 = mean(grp2) - mean(grp3)
+\item grp3 = mean(grp3) - mean(grp4)
+}
 }
 \examples{
 mydf <- data.frame(

@@ -9,11 +9,12 @@
 #' compares only pairs of levels (not a level to a cumulative mean of levels)
 #'
 #' Example interpretation for a 4 level factor:
-#' Intercept = Grand mean (mean of the means of each level)
-#' grp2 = mean(grp2) - mean(grp1)
-#' grp3 = mean(grp3) - mean(grp1, grp2)
-#' grp4 = mean(grp4) - mean(grp1, grp2, grp3)
-#'
+#' \itemize{
+#' \item Intercept = Grand mean (mean of the means of each level)
+#' \item grp2 = mean(grp2) - mean(grp1)
+#' \item grp3 = mean(grp3) - mean(grp1, grp2)
+#' \item grp4 = mean(grp4) - mean(grp1, grp2, grp3)
+#'}
 #' @param n_levels Number of levels in the factor
 #'
 #' @return Contrast matrix
@@ -49,10 +50,12 @@ reverse_helmert_code <- function(n_levels){
 #' of levels (not a level to a cumulative mean of levels).
 #'
 #' Example interpretation for a 4 level factor:
-#' Intercept = Grand mean (mean of the means of each level)
-#' grp1 = mean(grp4, grp3, grp2) - grp(1)
-#' grp2 = mean(grp4, grp3) - mean(grp2)
-#' grp3 = mean(grp3) - mean(grp4)
+#' \itemize{
+#' \item Intercept = Grand mean (mean of the means of each level)
+#' \item grp1 = mean(grp4, grp3, grp2) - grp(1)
+#' \item grp2 = mean(grp4, grp3) - mean(grp2)
+#' \item grp3 = mean(grp3) - mean(grp4)
+#'}
 #'
 #' @param n_levels Number of levels in the factor
 #'

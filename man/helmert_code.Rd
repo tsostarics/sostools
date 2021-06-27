@@ -22,10 +22,12 @@ after it. Differs from forward difference coding, which only compares pairs
 of levels (not a level to a cumulative mean of levels).
 
 Example interpretation for a 4 level factor:
-Intercept = Grand mean (mean of the means of each level)
-grp1 = mean(grp4, grp3, grp2) - grp(1)
-grp2 = mean(grp4, grp3) - mean(grp2)
-grp3 = mean(grp3) - mean(grp4)
+\itemize{
+\item Intercept = Grand mean (mean of the means of each level)
+\item grp1 = mean(grp4, grp3, grp2) - grp(1)
+\item grp2 = mean(grp4, grp3) - mean(grp2)
+\item grp3 = mean(grp3) - mean(grp4)
+}
 }
 \examples{
 

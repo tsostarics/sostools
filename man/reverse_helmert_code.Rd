@@ -23,10 +23,12 @@ that have come before it. Differs from backward difference coding, which
 compares only pairs of levels (not a level to a cumulative mean of levels)
 
 Example interpretation for a 4 level factor:
-Intercept = Grand mean (mean of the means of each level)
-grp2 = mean(grp2) - mean(grp1)
-grp3 = mean(grp3) - mean(grp1, grp2)
-grp4 = mean(grp4) - mean(grp1, grp2, grp3)
+\itemize{
+\item Intercept = Grand mean (mean of the means of each level)
+\item grp2 = mean(grp2) - mean(grp1)
+\item grp3 = mean(grp3) - mean(grp1, grp2)
+\item grp4 = mean(grp4) - mean(grp1, grp2, grp3)
+}
 }
 \examples{
 
