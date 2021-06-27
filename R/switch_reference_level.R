@@ -17,7 +17,7 @@
   reference_row <- as.matrix(contrast_matrix[old_reference,]) # as.matrix needed for n_levels = 2
   contrast_matrix[old_reference,] <- as.matrix(contrast_matrix[new_reference,])
   contrast_matrix[new_reference,] <- reference_row
-  comparison_order <- seq_len(old_reference-1)
+  comparison_order <- seq_len(old_reference - 1)
   if (identical(coding_fx, contr.treatment))
     return(contrast_matrix)
   if (old_reference != 2) # Avoid dimension length issues with n=2

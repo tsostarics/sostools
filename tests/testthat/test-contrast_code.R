@@ -91,6 +91,4 @@ test_that("four level functional coding work", {
                manual_code(tst_data$four, contr.poly(4)))
   expect_equal(functional_code(tst_data$four, scaled_sum_code),
                contrast_code(tst_data$four, scaled_sum_code))
-  expect_equal(contrast_code(tst_data$four, scaled_sum_code(4)),
-               manual_code(tst_data$four, scaled_sum_code(4)))
 })
