@@ -7,9 +7,9 @@
 enlist_coefs(model, correct = NA)
 }
 \arguments{
-\item{correct}{Regular expressions targeting coefficients to bonferroni correct}
+\item{model}{A model object with a summary method}
 
-\item{mdl}{A model object with a summary method}
+\item{correct}{Regular expressions targeting coefficients to bonferroni correct}
 }
 \value{
 A list of coefficient descriptions of the form (Beta = b, s.e.=se, z=z, p=p)

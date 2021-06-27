@@ -3,7 +3,7 @@
 #' Takes a model object and creates a list of coefficients that can be referenced
 #' throughout an R markdown file.
 #'
-#' @param mdl A model object with a summary method
+#' @param model A model object with a summary method
 #' @param correct Regular expressions targeting coefficients to bonferroni correct
 #' @return A list of coefficient descriptions of the form (Beta = b, s.e.=se, z=z, p=p)
 #' for latex output
