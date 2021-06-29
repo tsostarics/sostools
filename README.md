@@ -111,7 +111,7 @@ helpers are included in this package, but they also work with R’s built
 in `contr.___` functions. When applicable with sum and dummy coding, you
 can pass in a desired reference level. Coding schemes that require a
 specific level order, such as forward/backward difference or helmert
-coding, should be set before applying contrasts.
+coding, should be set with `levels<-` **before** applying contrasts.
 
 ``` r
 contrast_code(mdl_data$cyl, scaled_sum_code)
@@ -173,7 +173,7 @@ can also utilize the `contrasts` argument in functions like `lm`, which
 take a named list of contrast matrices where the names correspond to
 factor predictors. This package provides a function `enlist_contrasts`
 to take advantage of this. Make sure your model fitting function
-supports this argument!
+supports this argument.
 
 ``` r
 mdl_data <- mutate(mdl_data, gear = factor(gear), carb = factor(carb))
@@ -181,7 +181,7 @@ mdl_data <- mutate(mdl_data, gear = factor(gear), carb = factor(carb))
 my_contrasts <- 
   enlist_contrasts(mdl_data,
                    cyl ~ contr.sum + 6, # Set the reference level with + ___
-                   twolevel ~ scaled_sum_code + a, # String labels stay unquoted
+                   twolevel ~ scaled_sum_code + "a",
                    gear ~ forward_difference_code,
                    carb ~ helmert_code)
 
@@ -197,28 +197,36 @@ summary(my_model)
 #> 
 #> Residuals:
 #>     Min      1Q  Median      3Q     Max 
-#> -5.6660 -1.4794 -0.0161  1.6347  5.4340 
+#> -5.3950 -1.4668 -0.0066  1.8003  5.3767 
 #> 
 #> Coefficients:
 #>             Estimate Std. Error t value Pr(>|t|)    
-#> (Intercept)  19.7447     0.9749  20.253 2.92e-15 ***
-#> cyl4          1.9369     1.6632   1.165   0.2573    
-#> cyl8         -1.6442     1.7064  -0.964   0.3463    
-#> twolevelb     0.3966     1.3420   0.296   0.7705    
-#> gear3-4      -5.6688     2.3914  -2.371   0.0274 *  
-#> gear4-5      -0.5444     2.3281  -0.234   0.8174    
-#> carb>1        5.8536     2.6542   2.205   0.0387 *  
-#> carb>2        4.4711     2.2503   1.987   0.0601 .  
-#> carb>3        5.2851     2.9857   1.770   0.0912 .  
-#> carb>4        2.0582     3.0773   0.669   0.5109    
-#> carb>6        3.3485     4.9881   0.671   0.5093    
+#> (Intercept)  19.9054     0.9580  20.777 1.75e-15 ***
+#> cyl4          1.9223     1.6643   1.155   0.2611    
+#> cyl8         -1.6955     1.7097  -0.992   0.3327    
+#> twolevelb    -0.3284     1.2350  -0.266   0.7929    
+#> gear3-4      -5.5505     2.3728  -2.339   0.0293 *  
+#> gear4-5      -0.6906     2.1907  -0.315   0.7557    
+#> carb>1        5.8937     2.6387   2.234   0.0365 *  
+#> carb>2        4.2476     2.3585   1.801   0.0861 .  
+#> carb>3        5.2094     3.0208   1.724   0.0993 .  
+#> carb>4        1.8194     3.2537   0.559   0.5820    
+#> carb>6        3.2314     4.9955   0.647   0.5247    
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
-#> Residual standard error: 3.114 on 21 degrees of freedom
-#> Multiple R-squared:  0.8192, Adjusted R-squared:  0.733 
-#> F-statistic: 9.512 on 10 and 21 DF,  p-value: 9.082e-06
+#> Residual standard error: 3.115 on 21 degrees of freedom
+#> Multiple R-squared:  0.819,  Adjusted R-squared:  0.7328 
+#> F-statistic: 9.503 on 10 and 21 DF,  p-value: 9.152e-06
 ```
+
+In the above code, the contrast functions used can also be matrices
+assigned to a variable as in `my_var <- matrix(...); factor ~ my_var`.
+Reference levels set with `+ "a"` or `+ 6` can also be assigned to a
+variable beforehand, e.g. 
+`ref_level <- 6; cyl ~ contr.sum + ref_level`. Note this means that
+`factor ~ scheme + a` and `factor ~ scheme + "a"` are *not* equivalent.
+The former will throw an error if the object `a` is not found.
 
 And we can always check what the contrasts are. Here I use `fractions`
 from the `MASS` package to print the contrasts as fractions instead of

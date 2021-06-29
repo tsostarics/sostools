@@ -96,7 +96,8 @@ which will invoke `functional_code()`. A series of helpers are included in this
 package, but they also work with R's built in `contr.___` functions. When
 applicable with sum and dummy coding, you can pass in a desired reference level.
 Coding schemes that require a specific level order, such as forward/backward
-difference or helmert coding, should be set before applying contrasts.
+difference or helmert coding, should be set with `levels<-` **before** applying 
+contrasts.
 ```{r}
 contrast_code(mdl_data$cyl, scaled_sum_code)
 contrast_code(mdl_data$cyl, scaled_sum_code, reference = "6")
@@ -116,7 +117,7 @@ Rather than manually setting the contrasts on the data frame itself, you can
 also utilize the `contrasts` argument in functions like `lm`, which take a named
 list of contrast matrices where the names correspond to factor predictors. This
 package provides a function `enlist_contrasts` to take advantage of this. Make
-sure your model fitting function supports this argument!
+sure your model fitting function supports this argument. 
 
 ```{r}
 mdl_data <- mutate(mdl_data, gear = factor(gear), carb = factor(carb))
@@ -124,7 +125,7 @@ mdl_data <- mutate(mdl_data, gear = factor(gear), carb = factor(carb))
 my_contrasts <- 
   enlist_contrasts(mdl_data,
                    cyl ~ contr.sum + 6, # Set the reference level with + ___
-                   twolevel ~ scaled_sum_code + a, # String labels stay unquoted
+                   twolevel ~ scaled_sum_code + "a",
                    gear ~ forward_difference_code,
                    carb ~ helmert_code)
 
@@ -134,6 +135,13 @@ my_model <- lm(mpg ~ cyl + twolevel + gear + carb,
 
 summary(my_model)
 ```
+
+In the above code, the contrast functions used can also be matrices assigned to
+a variable as in `my_var <- matrix(...); factor ~ my_var`. Reference levels set 
+with `+ "a"` or `+ 6` can also be assigned to a variable beforehand, e.g. 
+`ref_level <- 6; cyl ~ contr.sum + ref_level`. Note this means that 
+`factor ~ scheme + a` and `factor ~ scheme + "a"` are *not* equivalent. The former
+will throw an error if the object `a` is not found.
 
 And we can always check what the contrasts are. Here I use `fractions` from the
 `MASS` package to print the contrasts as fractions instead of decimals.
