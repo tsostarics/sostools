@@ -32,7 +32,9 @@ Suggests:
     ggplot2,
     roxygen2,
     stringr,
-    MASS
+    MASS,
+    rmarkdown
 Config/testthat/edition: 3
 URL: https://github.com/tsostarics/sostools
 BugReports: https://github.com/tsostarics/sostools/issues
+VignetteBuilder: knitr
