@@ -77,11 +77,11 @@ enlist_contrasts <- function(model_data, ...) {
   coding_scheme <- strsplit(char_formula[[3L]], " + ", fixed = TRUE)[[1L]]
   reference_level <- NA
   if (length(coding_scheme) == 2)
-    reference_level <- eval(parse(text = coding_scheme[[2L]]))
+    reference_level <- get(coding_scheme[[2L]])
 
   contrast_code(
     factor_col = model_data[[char_formula[[2L]]]],
-    code_by = eval(parse(text = coding_scheme[[1L]])),
+    code_by = get(coding_scheme[[1L]]),
     reference_level = reference_level
   )
 
