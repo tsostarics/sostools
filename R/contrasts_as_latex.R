@@ -42,5 +42,5 @@ contrasts_as_latex <- function(factor_col) {
 
   frac_values <- stringr::str_match_all(fraction_string, "(-?)(\\d)/(\\d)")[[1]][,2:4]
 
-  paste0(frac_values[1],"\\\\frac\\{",frac_values[2],"\\}\\{",frac_values[3],"\\}")
+  paste0(frac_values[1],"$\\\\frac\\{",frac_values[2],"\\}\\{",frac_values[3],"\\}$")
 }
