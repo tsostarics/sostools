@@ -84,7 +84,7 @@ plot_propodds <- function(propodds_results, resp_var = "scale_response") {
   propodds_results |>
     dplyr::filter(term != '(Intercept)') |>
     dplyr::group_by(term) |>
-    dplyr::mutate(mn = mean(estimate),
+    dplyr::mutate(mn = mean(estimate, na.rm = TRUE),
                   check = ifelse(ci_low > mn | ci_high < mn, "red", "black")) |>
     ggplot2::ggplot(aes(x = scale_response, y = estimate, ymax = ci_high, ymin = ci_low, color = I(check))) +
     ggplot2::geom_point() +
