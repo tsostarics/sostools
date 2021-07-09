@@ -56,6 +56,9 @@ You could say something like: We found no significant effect of cylinder
 `r get_coef2("cyl")` or gear `r get_coef2("gear")` nor a significant interaction
 between the two `r get_coef2("cyl:gear")`.
 
+You can also use these with Bayesian models fit with `brms`, which will give you
+the $\beta$ estimate as well as the credible interval.
+
 ## Contrast coding functionality
 
 See the `contrasts` vignette with `vignette('contrasts', 'sostools')`.

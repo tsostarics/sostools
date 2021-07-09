@@ -44,10 +44,13 @@ get_coef2("cyl:gear")
 
 Here we can get the formatted values of a write up easily with in-line R
 code. You could say something like: We found no significant effect of
-cylinder (*β*=−0.18,*t*=−0.09,*s*.*e*.=2.05,*p*=0.931) or gear
-(*β*=5.14,*t*=1.41,*s*.*e*.=3.63,*p*=0.168) nor a significant
-interaction between the two
-(*β*=−0.67,*t*=−1.27,*s*.*e*.=0.53,*p*=0.213).
+cylinder (*β* =  − 0.18, *t* =  − 0.09, *s*.*e*. = 2.05, *p* = 0.931) or
+gear (*β* = 5.14, *t* = 1.41, *s*.*e*. = 3.63, *p* = 0.168) nor a
+significant interaction between the two
+(*β* =  − 0.67, *t* =  − 1.27, *s*.*e*. = 0.53, *p* = 0.213).
+
+You can also use these with Bayesian models fit with `brms`, which will
+give you the *β* estimate as well as the credible interval.
 
 ## Contrast coding functionality
 
