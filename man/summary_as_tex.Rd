@@ -9,7 +9,10 @@ summary_as_tex(
   correct = NA,
   statistic = "$z$",
   caption = NA,
-  label = NA
+  label = NA,
+  include_prior = FALSE,
+  ci_level = 0.95,
+  use_ROPE = FALSE
 )
 }
 \arguments{
@@ -23,6 +26,14 @@ in $s}
 \item{caption}{Caption to use for the table}
 
 \item{label}{Label to use when referencing the table}
+
+\item{include_prior}{Should priors be included? (only if model is brmsfit)}
+
+\item{ci_level}{Defaults to .95 (only if model is brmsfit)}
+
+\item{use_ROPE}{ROPE object from bayestestR::rope, or TRUE to run this with the
+default settings. Adds the % in ROPE to table after confidence intervals. FALSE
+to not include. (only if model is brmsfit)}
 }
 \description{
 This is just a quick way to make a table for output to either html or, more

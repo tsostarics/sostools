@@ -82,6 +82,12 @@ enlist_contrasts <- function(model_data, ...) {
     else
       reference_level <- gsub('"', '', coding_scheme[[2L]])
 
+  # Additional handling if raw matrix is passed
+  if (grepl("matrix\\(",coding_scheme[[1L]])) {
+    use_matrix <- eval(parse(text = coding_scheme[[1L]]))
+    coding_scheme[[1L]] <- 'use_matrix'
+  }
+
   contrast_code(
     factor_col = model_data[[char_formula[[2L]]]],
     code_by = get(coding_scheme[[1L]]),

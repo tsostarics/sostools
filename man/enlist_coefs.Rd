@@ -4,12 +4,14 @@
 \alias{enlist_coefs}
 \title{Enlist Coefficients}
 \usage{
-enlist_coefs(model, correct = NA)
+enlist_coefs(model, correct = NA, ...)
 }
 \arguments{
 \item{model}{A model object with a summary method}
 
 \item{correct}{Regular expressions targeting coefficients to bonferroni correct}
+
+\item{...}{Additional arguments if model is a brmsfit, see docs for tidy_brmsfit for options}
 }
 \value{
 A list of coefficient descriptions of the form (Beta = b, s.e.=se, z=z, p=p)
