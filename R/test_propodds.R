@@ -43,7 +43,7 @@ test_propodds <- function(ord_data, model_formula) {
     dplyr::group_by(term) |>
     dplyr::mutate(mn = mean(estimate),
                   check = ifelse(ci_low > mn | ci_high < mn, 1, 0))
-  n_fail <- sum(propodds_checks$check)
+  n_fail <- sum(propodds_checks$check, na.rm = T)
 
 
   # Print message to console
@@ -63,7 +63,7 @@ test_propodds <- function(ord_data, model_formula) {
   glm_formula <- stats::formula(paste(model_formula[[2L]],"~",model_formula[[3L]]))
   mdl <- mdl_fx(glm_formula, family = "binomial", data = new_data)
   ci <- stats::confint(mdl, method = "Wald",level = .99)
-  ci <- ci[!is.na(ci[,1]),] # remove any random effects
+  ci <- ci[!is.na(ci[,1]) | !is.na(ci[,2]),] # remove any random effects
   tibble::tibble(!!response_var := j,
          term = names(coef_fx(mdl)),
          estimate = coef_fx(mdl),
