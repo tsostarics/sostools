@@ -30,10 +30,10 @@ summary_as_tex <- function(model,
   requireNamespace("knitr", quietly = TRUE)
   requireNamespace("scales", quietly = TRUE)
 
-  if (class(model) == "clmm")
+  if (class(model)[[1L]] == "clmm")
     return(.summary_as_tex.clmm(model, correct, statistic, caption, label))
 
-  if (class(model) == 'brmsfit')
+  if (class(model)[[1L]] == 'brmsfit')
     return(.summary_as_tex.brmsfit(model, caption, label, include_prior, ci_level, use_ROPE))
   tidy_fx <- .get_tidy_fx(model)
 
@@ -47,11 +47,18 @@ summary_as_tex <- function(model,
   if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
 
-  coefs |>
+  summary_table <-
+    coefs |>
     dplyr::mutate(p.value = scales::pvalue(p.value),
-                  term = gsub("_","\\\\_",term)) |>
-    dplyr::filter(is.na(group)) |> # note this will cause issues for non mixed models
-    dplyr::select(-effect, -group) |>
+                  term = gsub("_","\\\\_",term))
+  if ("group" %in% names(summary_table)){
+    summary_table <-
+      summary_table |>
+      dplyr::filter(is.na(group)) |> # note this will cause issues for non mixed models
+    dplyr::select(-effect, -group)
+    }
+
+  summary_table |>
     knitr::kable(digits = c(0,2,2,2,3),
                  col.names = c("Term",
                                "Estimate",
@@ -92,7 +99,7 @@ summary_as_tex <- function(model,
   coefs <- tidy_brmsfit(model, include_prior)
   ci_label <- paste0(ci_level * 100, "\\% CI")
 
-  if (class(use_ROPE) == "rope"){
+  if (class(use_ROPE)[[1L]] == "rope"){
     add_rope <- dplyr::transmute(use_ROPE,
                                  term = gsub("^b_", "", Parameter),
                                  pct = round(ROPE_Percentage * 100, 2))
@@ -208,7 +215,7 @@ addlinespace <- function(table, terms) {
 
 
 .get_tidy_fx <- function(model) {
-  if (class(model) %in% c('lmerMod','glmerMod'))
+  if (class(model)[[1]] %in% c('lmerMod','glmerMod'))
     return(broom.mixed::tidy)
 
   return(broom::tidy)
