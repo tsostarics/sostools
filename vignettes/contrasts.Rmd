@@ -116,7 +116,7 @@ set to the first level alphabetically, rather than the last level. This is
 the default behavior, but can be set to whatever you want.
 
 ```{r}
-contrast_code(mdl_data$carb, contr.sum, reference = 4)
+contrast_code(mdl_data$carb, contr.sum, reference_level = 4)
 ```
 
 Note how the comparison labels have also changed appropriately.
@@ -177,7 +177,7 @@ name of a factor column, and the right hand side should be of the following:
 - ***OR*** A `matrix()` call, which will be captured and evaluated
 - ***AND*** An optional reference level when applicable, following a `+`. String
 names should be quoted, if the label happens to be numeric you can leave the number
-unquoted. You can also use an unquoted variable name that containes the reference
+unquoted. You can also use an unquoted variable name that contains the reference
 level.
 
 When using this method you should set contrasts for all factors. You'll receive
@@ -270,7 +270,7 @@ descriptions:
  - `0, 1` from `contr.treatment(2)` puts the intercept at the reference level
  and tests the difference $\mu_B-\mu_A$. Each comparison tests a distance from
  the reference level. We use the term *treatment coding*.
- - `-1, 1` from `-contr.sum` puts the intercept at the grand mean 
+ - `-1, 1` from `-contr.sum(2)` puts the intercept at the grand mean 
  ($GM=\frac{\mu_A+\mu_B}{2}$) and tests the difference $\mu_B - GM$. Each comparison
  tests a distance from the grand mean. We use the term *sum coding*
  - `-.5, .5` from `-contr.sum(2)/2` puts the intercept at the grand mean and 
@@ -279,6 +279,9 @@ descriptions:
  
 It's worth noting that the term "sum coding" is not consistent across disciplines.
 Other terms that are used are simple coding, deviation coding, and contrast coding.
+I recommend that you choose a term from your discipline and stick to it,
+but also provide the exact contrast or hypothesis matrices in an appendix,
+preregistration, or supplementary material.
 
 # Conclusion
 
