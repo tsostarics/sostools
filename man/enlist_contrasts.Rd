@@ -10,12 +10,16 @@ enlist_contrasts(model_data, ...)
 \item{model_data}{Data frame you intend on passing to your model}
 
 \item{...}{A series of 2 sided formulas with factor name on the LHS and
-desired contrast scheme on the RHS, reference levels can be set with +}
+desired contrast scheme on the RHS, reference levels can be set with + and the
+intercept can be overwritten with * (+ should come first if both are set)}
 }
 \value{
 List of named contrast matrices
 }
 \description{
+Returns a list of contrast matrices to use with modeling functions directly.
+}
+\details{
 Typically model functions like lm will have a contrasts argument where you can
 set the contrasts at model run time, rather than having to manually change
 the contrasts on the underlying factor columns in your data. If you prefer
@@ -54,6 +58,6 @@ enlist_contrasts(my_df,
 
 
 # Will inform you if there are factors you didn't set
-enlist_contrasts(my_df,
-    gear ~ scaled_sum_code)
+enlist_contrasts(my_df, gear ~ scaled_sum_code)
+
 }
