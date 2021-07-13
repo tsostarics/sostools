@@ -26,12 +26,16 @@ functionality of this package is focused on the following:
 - Retain interpretable labels in model summary coefficients
 - Allow the implementation of custom contrasts (but again not their creation)
 
-This vignette will not describe how different contrast schemes are created or
+This vignette will not go into detail how different contrast schemes are derived or
 interpreted, but will describe some of the high level differences. I recommend
 reading the following:
 
 - [UCLA R Library Contrast Coding Systems for Categorical Variables](https://stats.idre.ucla.edu/r/library/r-library-contrast-coding-systems-for-categorical-variables/)
 - [How to capitalize on a priori contrasts in linear (mixed) models: A tutorial](https://www.sciencedirect.com/science/article/pii/S0749596X19300695)
+
+There is a very small overview of hypothesis matrices in the second to last
+section, but I will not provide a discussion of orthogonality as it relates
+to contrasts.
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(sostools)
@@ -179,6 +183,8 @@ name of a factor column, and the right hand side should be of the following:
 names should be quoted, if the label happens to be numeric you can leave the number
 unquoted. You can also use an unquoted variable name that contains the reference
 level.
+- **AND** An optional specification for which level to use as the intercept. Same
+syntax as the reference level, see section titled "Changing Underlying Intercept"
 
 When using this method you should set contrasts for all factors. You'll receive
 a warning if you don't set one or more:
@@ -209,6 +215,12 @@ contrasts(mdl_data$carb)
 contrasts(mdl_data2$carb) %>% fractions()
 ```
 
+One other thing to know is that when calling `get_prior` or setting priors for
+coefficients in general, `brms` actually changes the names slightly when prepping
+the model for running in stan. For example, using backward difference coding gives
+coefficient names like `2-1`, but this gets changed to `2M1`. If you're doing
+programmatic setting of priors or something, it's something to keep in mind.
+
 ## Note about 2 level factors
 
 Coding factors with only 2 levels is a bit tricky conceptually because there
@@ -224,13 +236,13 @@ forward_difference_code(2) # Compare k to k+1
 In many introductions to contrast coding, the motivation for using `+/-.5` is
 something like this:
 
- - `0, 1` from `contr.treatment(2)` puts the intercept at the reference level, 
- which we don't always want
- - `-1, 1` from `-contr.sum(2)` keeps the same reference level and the intercept 
- is now the grand mean, but this tests half the difference between levels
- - `-.5, .5` from `-contr.sum(2)/2` scales the estimate so it tests the full 
- difference between levels.
- 
+- `0, 1` from `contr.treatment(2)` puts the intercept at the reference level, 
+which we don't always want
+- `-1, 1` from `-contr.sum(2)` keeps the same reference level and the intercept 
+is now the grand mean, but this tests half the difference between levels
+- `-.5, .5` from `-contr.sum(2)/2` scales the estimate so it tests the full 
+difference between levels.
+
 All of this is true, but it leads to an issue when naively extending this line
 of thinking beyond 2 levels. That is, one might be tempted to use the following
 matrix for "sum coding a 4 level factor"
@@ -267,21 +279,173 @@ of the underlying hypothesis matrix being tested is more generalizable. Assume
 level 1 is `A` (and is the reference level) and level 2 is `B` in these
 descriptions:
 
- - `0, 1` from `contr.treatment(2)` puts the intercept at the reference level
- and tests the difference $\mu_B-\mu_A$. Each comparison tests a distance from
- the reference level. We use the term *treatment coding*.
- - `-1, 1` from `-contr.sum(2)` puts the intercept at the grand mean 
- ($GM=\frac{\mu_A+\mu_B}{2}$) and tests the difference $\mu_B - GM$. Each comparison
- tests a distance from the grand mean. We use the term *sum coding*
- - `-.5, .5` from `-contr.sum(2)/2` puts the intercept at the grand mean and 
- tests the difference $\mu_B - \mu_A$. Each comparison tests a distance from
- the reference level. We use the term *scaled sum coding*.
- 
+- `0, 1` from `contr.treatment(2)` puts the intercept at the reference level
+and tests the difference $\mu_B-\mu_A$. Each comparison tests a distance from
+the reference level. We use the term *treatment coding*.
+- `-1, 1` from `-contr.sum(2)` puts the intercept at the grand mean 
+($GM=\frac{\mu_A+\mu_B}{2}$) and tests the difference $\mu_B - GM$. Each comparison
+tests a distance from the grand mean. We use the term *sum coding*
+- `-.5, .5` from `-contr.sum(2)/2` puts the intercept at the grand mean and 
+tests the difference $\mu_B - \mu_A$. Each comparison tests a distance from
+the reference level. We use the term *scaled sum coding*.
+
 It's worth noting that the term "sum coding" is not consistent across disciplines.
 Other terms that are used are simple coding, deviation coding, and contrast coding.
 I recommend that you choose a term from your discipline and stick to it,
 but also provide the exact contrast or hypothesis matrices in an appendix,
 preregistration, or supplementary material.
+
+## Changing Underlying Intercept
+
+I know I said I wouldn't give a discussion on how contrasts are derived
+matrices, but there's one additional functionality that kind of necessitates
+describing the process a little. We know that contrast matrices have $k$ rows
+and $k-1$ columns for our $k-1$ comparisons (derived from $k-1$ degrees of
+freedom). But models also give an intercept term: where does that come from?
+Moreover, why is it conveniently the grand mean for basically everything but
+treatment coding? What if I wanted a particular coding scheme for my level
+comparisons, but the intercept representing the mean of my highest level rather
+than the grand mean (which might not be meaningful)? Is this possible?
+
+First, recall that scaled sum coding puts the intercept at the grand mean and
+the comparisons are between the reference level and the level being compared.
+
+```{r}
+fractions(scaled_sum_code(4))
+```
+
+The intercept in this case is actually represented by an omitted column of 1s
+
+```{r}
+matrix(c(rep(1,4),
+         scaled_sum_code(4)),
+       nrow = 4) %>% fractions()
+```
+
+Why are there fractions though? If I'm comparing level 1 to level 2, why aren't
+the others 0? Why aren't they just 0 compared to 1, like in treatment coding? This
+intuition is actually valid; not at the level of the contrasts but at the level
+of the hypotheses you want to test. Turns out those hypotheses actually underlie
+this matrix, and linear algebra transformations can be used to go between the two.
+For more details, see the paper on capitalizing on a priori contrasts. For now
+just know that we can take the inverse of the transpose of a matrix to go between
+the two.
+
+```{r}
+contrast_matrix <- 
+  matrix(c(rep(1,4),
+           scaled_sum_code(4)),
+         nrow = 4)
+
+hypothesis_matrix <- solve(t(contrast_matrix))
+
+fractions(hypothesis_matrix)
+```
+
+This gives us our hypothesis matrix, and we can tell from the first column that
+the intercept is the grand mean because each level contributes to a single value.
+That is, the sum of the means of our 4 levels, divided by 4, is the grand mean;
+hence the weight of each mean is 1/4. Our comparisons show that we're comparing
+the fourth level (all -1s) to the 1st, 2nd, and 3rd levels for our three 
+comparisons. This is maybe more transparent than the 3/4 and -1/4s in the contrast
+matrix.
+
+However, consider if we didn't want the grand mean. What if we wanted the
+intercept to be a particular level's mean, say our reference level of 4? Rather
+than having each level contribute to the intercept, we just want 1. So we can use
+this matrix:
+
+```{r}
+hypothesis_matrix2 <- hypothesis_matrix
+hypothesis_matrix2[,1] <- c(0,0,0,1)
+hypothesis_matrix2
+```
+
+Think critically here: Our intercept is now the mean of level 4, the other levels
+don't contribute to it. Each comparison is now the difference between a level and
+the reference level. If that's the case, we should have just recreated treatment
+coding! But we need to convert from our hypothesis matrix to the contrast matrix.
+Remind yourself what the contrast matrix from treatment coding should look 
+like before proceeding.
+
+```{r}
+# Inverse of the transpose, remove the first column to get contrasts
+maybe_treatment_contrasts <- solve(t(hypothesis_matrix2))[,2:4]
+
+# I'm manually reordering to make the reference level the 4th level here
+definitely_treatment_contrasts <- unname(contr.treatment(4)[c(2,3,4,1),])
+
+maybe_treatment_contrasts
+definitely_treatment_contrasts
+
+# Moment of truth: Are they the same?!
+all(maybe_treatment_contrasts == definitely_treatment_contrasts)
+```
+
+And indeed we recreated treatment coding by changing the underlying hypothesis
+matrix. That was so much work to get something already available. Consider
+a harder case of forward difference coding with the intercept changed.
+
+```{r}
+forward_contrasts <- forward_difference_code(6)
+forward_hypotheses <- 
+  matrix(c(rep(1,6), forward_contrasts), nrow = 6) %>% t() %>% solve()
+
+fractions(forward_contrasts)
+fractions(forward_hypotheses)
+```
+
+Now we'll change the intercept to level 6.
+
+```{r}
+new_forward_hypotheses <- forward_hypotheses
+new_forward_hypotheses[,1] <- c(0,0,0,0,0,1)
+new_forward_hypotheses
+
+new_forward_contrasts <- solve(t(new_forward_hypotheses))[,2:6]
+new_forward_contrasts
+```
+
+The matrix changed pretty substantially compared to before, even though all
+we changed was the intercept. This still required quite a few steps to just
+change the level we want to be the intercept. Thankfully `enlist_contrasts`
+and related functions `set_contrasts`, `contrast_code`, and `functional_code`
+have an argument to change this more simply. 
+
+The syntax for `enlist_contrasts` and `set_contrasts` requires putting a `*`
+before the name of the level you want to use. If you're using a reference level,
+you can also specify that with `+` as usual. You can also use both, but specifying
+a reference level is only applicable to schemes where that's meaningful, like
+in `contr.treatment`, `contr.sum`, and `scaled_sum_code`. Recall from our earlier
+derivation that scaled sum coding with the intercept specified as the reference
+level is equivalent to treatment coding, which should be evident here.
+
+```{r}
+enlist_contrasts(mdl_data, 
+                 carb ~ forward_difference_code * 8,
+                 gear ~ scaled_sum_code + 4 * 4)
+```
+
+Using the singular `contrast_code` just requires specifying the `reference_level`
+and `set_intercept` arguments as needed.
+
+```{r}
+contrast_code(mdl_data$gear, 
+              scaled_sum_code, 
+              reference_level = 4, 
+              set_intercept = 4)
+```
+
+This functionality should only be used when you're using a function to generate
+contrasts. Currently, I don't allow for multiple levels to be used as the intercept
+(e.g., only 2 of 4 levels). If you really think you need to do that, you probably
+have a good handle on contrasts and hypothesis matrices, so you should specify
+the matrix manually yourself and use that as an argument. If you think you need
+to do that but you *don't* have a good handle on contrasts and hypothesis matrices,
+you should go back and read the paper cited at the top of this vignette again.
+Remember that when setting matrices yourself, you should specify the row names
+to be your factor levels and your column names to be informative comparison 
+labels.
 
 # Conclusion
 
