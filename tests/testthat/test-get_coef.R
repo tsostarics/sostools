@@ -6,7 +6,8 @@ test_that("multiplication works", {
   # All are equivalent
   expect_equal(
     get_coef("cyl:gear", coefs),
-    get_coef1("cyl:gear"),
-    get_coef2("cyl:gear")
+    get_coef1("cyl:gear")
   )
+
+  expect_equal(get_coef1("cyl:gear"),get_coef2("cyl:gear"))
 })
