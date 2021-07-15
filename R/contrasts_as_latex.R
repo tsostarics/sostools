@@ -8,7 +8,11 @@
 #' @export
 contrasts_as_latex <- function(factor_col) {
   requireNamespace("MASS", quietly = TRUE)
-  value_matrix <- as.character(MASS::fractions(contrasts(factor_col)))
+  contrast_matrix <- contrasts(factor_col)
+  # Add this functionality in later, i don't feel like doing it rn bc i have to mess around with the dimnames
+  # if (hypotheses)
+  #   contrast_matrix <- .contrasts_to_hypotheses(contrast_matrix, nrow(contrast_matrix))
+  value_matrix <- as.character(MASS::fractions(contrast_matrix))
   value_matrix <- apply(value_matrix, c(1,2), .as_latex_frac)
   n_cols <- ncol(value_matrix)
   n_rows <- nrow(value_matrix)
