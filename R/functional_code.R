@@ -48,11 +48,7 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
 
   n_levels <- nrow(contrast_matrix)
   # Add back the missing intercept, solve the transpose for hypothesis matrix
-  hypothesis_matrix <-
-    c(rep(1,n_levels), contrast_matrix) |>
-    matrix(nrow = n_levels) |>
-    t() |>
-    solve()
+  hypothesis_matrix <- .contrasts_to_hypotheses(contrast_matrix, n_levels)
 
   intercept_column <- rep(0, n_levels)
   intercept_index <- which(rownames(contrast_matrix) == intercept_level)
@@ -77,4 +73,9 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
            identical(coding_fx, x),
          TRUE)
   )
+}
+
+.contrasts_to_hypotheses <- function(contrast_matrix, n_levels) {
+  intercept_matrix <- matrix(c(rep(1,n_levels), contrast_matrix), n_levels)
+  solve(t(intercept_matrix))
 }

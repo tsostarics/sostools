@@ -77,7 +77,8 @@ enlist_contrasts <- function(model_data, ...) {
 #'
 #' @param model_data Model data
 #' @param vars_in_model variables specified for contrast coding from formulas
-.convert_to_factors <- function(model_data, vars_in_model) {
+#' @param verbose Should message be sent? Defaults to TRUE
+.convert_to_factors <- function(model_data, vars_in_model, verbose = TRUE) {
   which_not_factors <- vapply(model_data[vars_in_model],
                               function(x) class(x)[[1L]] != "factor",
                               TRUE)
@@ -87,8 +88,9 @@ enlist_contrasts <- function(model_data, ...) {
     return(model_data)
 
   should_be_factors <- names(which_not_factors)[which_not_factors]
-  varnames <- crayon::blue(paste(varnames, collapse = ' '))
-  message(glue::glue("Converting these to factors: {varnames}"))
+  varnames <- crayon::blue(paste(should_be_factors, collapse = ' '))
+  if (verbose)
+    message(glue::glue("Converting these to factors: {varnames}"))
 
   dplyr::mutate(model_data, dplyr::across(dplyr::all_of(should_be_factors), factor))
 }
