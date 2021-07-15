@@ -4,12 +4,14 @@
 \alias{.convert_to_factors}
 \title{Convert non factors to factors}
 \usage{
-.convert_to_factors(model_data, vars_in_model)
+.convert_to_factors(model_data, vars_in_model, verbose = TRUE)
 }
 \arguments{
 \item{model_data}{Model data}
 
 \item{vars_in_model}{variables specified for contrast coding from formulas}
+
+\item{verbose}{Should message be sent? Defaults to TRUE}
 }
 \description{
 Helper to convert columns to factors if they aren't already

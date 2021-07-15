@@ -1,6 +1,7 @@
 test_that("set contrast equivalent to manual contrast codes", {
-  tst_df <- dplyr::mutate(mtcars, gear = factor(gear))
-  tst_df <- set_contrasts(tst_df, gear ~ helmert_code, cyl ~ contr.sum)
+  tst_df <- set_contrasts(dplyr::mutate(mtcars, gear = factor(gear)),
+                          gear ~ helmert_code,
+                          cyl ~ contr.sum)
 
   comparison_df <- dplyr::mutate(mtcars, gear = factor(gear), cyl = factor(cyl))
   contrasts(comparison_df$cyl) <- contrast_code(comparison_df$cyl, contr.sum)
