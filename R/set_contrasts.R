@@ -13,6 +13,9 @@ set_contrasts <- function(model_data, ...) {
   code_call <- match.call()
   code_call[[1L]] <- enlist_contrasts
   contrast_list <- eval(code_call)
+  factor_vars <- names(contrast_list)
+
+  model_data <- .convert_to_factors(model_data, factor_vars, verbose = FALSE)
 
   for (i in seq_along(contrast_list)) {
     factor_name <- names(contrast_list[i])
