@@ -92,3 +92,11 @@ test_that("four level functional coding work", {
   expect_equal(functional_code(tst_data$four, scaled_sum_code),
                contrast_code(tst_data$four, scaled_sum_code))
 })
+
+test_that("default 2 level factor works", {
+  test_matrix <- matrix(c(-.5,.5), nrow = 2)
+  colnames(test_matrix) <- 2
+  rownames(test_matrix) <- c(1,2)
+
+  expect_equal(test_matrix, contrast_code(factor(1:2)))
+})
