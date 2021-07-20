@@ -92,16 +92,19 @@ summary_as_tex <- function(model,
   coefs <- tidy_brmsfit(model, include_prior)
   ci_label <- paste0(ci_level * 100, "\\% CI")
 
-  if (class(use_ROPE) == "rope"){
-    add_rope <- dplyr::transmute(use_ROPE,
+  if (class(use_ROPE)[[1L]] == "rope"){
+    add_rope <- dplyr::transmute(use_ROPE |> dplyr::group_by(Parameter),
                                  term = gsub("^b_", "", Parameter),
                                  pct = round(ROPE_Percentage * 100, 2))
+    add_rope[["term"]] <- .fix_interaction_labels(use_ROPE, model)
+    add_rope[['Parameter']] <- NULL
     use_ROPE <- TRUE
   } else if (use_ROPE){
     requireNamespace('bayestestR', quietly = TRUE)
-    add_rope <- dplyr::transmute(bayestestR::rope(model) |> group_by(Parameter),
+    add_rope <- dplyr::transmute(bayestestR::rope(model) |> dplyr::group_by(Parameter),
                                  term = gsub("^b_", "", Parameter),
                                  pct = round(ROPE_Percentage * 100, 2))
+    add_rope[["term"]] <- .fix_interaction_labels(use_ROPE, model)
     add_rope[['Parameter']] <- NULL
 
   } else {
@@ -114,7 +117,11 @@ summary_as_tex <- function(model,
                      ci_label)
 
 
-  latex_table <-dplyr::mutate(coefs, term = gsub("_","\\\\_",term))
+  latex_table <- dplyr::mutate(coefs, term = gsub("_","\\\\_",term))
+  suppressWarnings(
+    if (!is.na(add_rope))
+    add_rope <- dplyr::mutate(add_rope, term = gsub("_","\\\\_",term))
+  )
   digits <- c(0,2,2,0)
   if (use_ROPE){
     latex_table <-
@@ -140,6 +147,20 @@ summary_as_tex <- function(model,
 
   gsub(r"(\{\})","",latex_table)
 
+}
+
+.fix_interaction_labels <- function(rope, model){
+  rope_terms <- gsub("^b_", "", rope[['Parameter']])
+  model_terms <- rownames(brms::fixef(model))
+  which_match <- rope_terms %in% model_terms
+  model_terms_dots <- gsub(":", ".", model_terms)
+  which_match_dots <- rope_terms %in% model_terms_dots
+
+  if (all(which_match == which_match_dots))
+    return(rope_terms)
+
+  if (all(rope_terms[!which_match] == model_terms_dots[!which_match]))
+    return(model_terms)
 }
 
 .summary_as_tex.clmm <- function(model, correct, statistic = "$z$", caption = NA, label = NA) {
