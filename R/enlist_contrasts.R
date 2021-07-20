@@ -1,13 +1,17 @@
 #' List of contrast matrices
 #'
+#' Returns a list of contrast matrices to use with modeling functions directly.
+#'
 #' Typically model functions like lm will have a contrasts argument where you can
 #' set the contrasts at model run time, rather than having to manually change
 #' the contrasts on the underlying factor columns in your data. If you prefer
 #' this way, you can use this to generate the named list of contrast matrices.
 #'
+#'
 #' @param model_data Data frame you intend on passing to your model
 #' @param ... A series of 2 sided formulas with factor name on the LHS and
-#' desired contrast scheme on the RHS, reference levels can be set with +
+#' desired contrast scheme on the RHS, reference levels can be set with + and the
+#' intercept can be overwritten with * (+ should come first if both are set)
 #'
 #' @return List of named contrast matrices
 #' @export
@@ -45,13 +49,15 @@
 #'
 #'
 #' # Will inform you if there are factors you didn't set
-#' enlist_contrasts(my_df,
-#'     gear ~ scaled_sum_code)
+#' enlist_contrasts(my_df, gear ~ scaled_sum_code)
+#'
 enlist_contrasts <- function(model_data, ...) {
   formulas <- lapply(rlang::enexprs(...), as.character)
 
   vars_in_model <- vapply(formulas, function(x) x[[2L]] %in% names(model_data), TRUE)
   names(vars_in_model) <- vapply(formulas, function(x) x[[2L]], "char")
+
+  model_data <- .convert_to_factors(model_data, names(vars_in_model))
 
   .check_remaining_factors(model_data, names(vars_in_model))
 
@@ -65,6 +71,30 @@ enlist_contrasts <- function(model_data, ...) {
   )
 }
 
+#' Convert non factors to factors
+#'
+#' Helper to convert columns to factors if they aren't already
+#'
+#' @param model_data Model data
+#' @param vars_in_model variables specified for contrast coding from formulas
+#' @param verbose Should message be sent? Defaults to TRUE
+.convert_to_factors <- function(model_data, vars_in_model, verbose = TRUE) {
+  which_not_factors <- vapply(model_data[vars_in_model],
+                              function(x) class(x)[[1L]] != "factor",
+                              TRUE)
+
+  # If all specified variables are already factors, we're good
+  if (all(!which_not_factors))
+    return(model_data)
+
+  should_be_factors <- names(which_not_factors)[which_not_factors]
+  varnames <- crayon::blue(paste(should_be_factors, collapse = ' '))
+  if (verbose)
+    message(glue::glue("Converting these to factors: {varnames}"))
+
+  dplyr::mutate(model_data, dplyr::across(dplyr::all_of(should_be_factors), factor))
+}
+
 #' Pass arguments to contrast code
 #'
 #' Helper to generate contrast matrix from passed formulas in enlist_contrasts
@@ -74,13 +104,24 @@ enlist_contrasts <- function(model_data, ...) {
 #'
 #' @return A contrast matrix
 .process_contrasts <- function(model_data, char_formula) {
-  coding_scheme <- strsplit(char_formula[[3L]], " + ", fixed = TRUE)[[1L]]
+  reference_specified <- grepl("\\+",char_formula[[3L]])
+  coding_scheme <- strsplit(char_formula[[3L]], " \\+|\\* ", perl = TRUE)[[1L]]
+  coding_scheme <- .scrub_scheme(coding_scheme)
+  arg_length <- length(coding_scheme)
   reference_level <- NA
-  if (length(coding_scheme) == 2)
-    if (exists(coding_scheme[[2L]]))
-      reference_level <- get(coding_scheme[[2L]])
+  intercept_level <- NA
+
+  # If three arguments are specified, 2nd is ref level & 3rd is intercept level
+  # otherwise the second level depends on whether + or * was used
+  if (arg_length == 3) {
+    reference_level <- .get_if_exists(coding_scheme[[2L]])
+    intercept_level <- .get_if_exists(coding_scheme[[3L]])
+  } else if (arg_length == 2) {
+    if (reference_specified)
+      reference_level <- .get_if_exists(coding_scheme[[2L]])
     else
-      reference_level <- gsub('"', '', coding_scheme[[2L]])
+      intercept_level <- .get_if_exists(coding_scheme[[2L]])
+  }
 
   # Additional handling if raw matrix is passed
   if (grepl("matrix\\(",coding_scheme[[1L]])) {
@@ -91,11 +132,38 @@ enlist_contrasts <- function(model_data, ...) {
   contrast_code(
     factor_col = model_data[[char_formula[[2L]]]],
     code_by = get(coding_scheme[[1L]]),
-    reference_level = reference_level
+    reference_level = reference_level,
+    set_intercept = intercept_level
   )
 
 }
 
+#' Remove whitespace
+#'
+#' small helper to trim whitespace
+#'
+#' @param coding_scheme coding scheme in enlist_contrasts
+#'
+#' @return new coding scheme char vector trimmed whitespace
+.scrub_scheme <- function(coding_scheme) {
+  vapply(coding_scheme, function(x) gsub(" *", "", x), "char", USE.NAMES = FALSE)
+}
+
+.get_if_exists <- function(scheme_argument) {
+  if (exists(scheme_argument))
+    return(get(scheme_argument))
+  gsub('"| ', '', scheme_argument)
+}
+
+#' Check for unspecified factors
+#'
+#' Sends a message if the user has factor columns in their model data frame
+#' that weren't specified with the others.
+#'
+#' @param model_data Model data
+#' @param specified_vars variables specified by the user from formulas
+#'
+#' @return nothing, just sends a message if needed
 .check_remaining_factors <- function(model_data, specified_vars) {
   column_classes <- lapply(model_data, class)
   factor_cols <- column_classes == "factor"
@@ -103,10 +171,8 @@ enlist_contrasts <- function(model_data, ...) {
   col_names <- names(factor_cols)[factor_cols]
 
   remaining_factors <- factor_cols[!col_names %in% specified_vars]
-  if (any(remaining_factors))
-    message(paste0("You didn't set these factors, expect dummy coding: ",
-                   paste(names(remaining_factors), collapse = ", ")
-                   )
-            )
-
+  if (any(remaining_factors)) {
+    varnames <- crayon::blue(paste(names(remaining_factors), collapse = " "))
+    message(glue::glue("You didn't set these factors, expect dummy coding: {varnames}"))
+  }
 }

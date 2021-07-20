@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 # sostools
 
 <!-- badges: start -->
+[![Codecov test coverage](https://codecov.io/gh/tsostarics/sostools/branch/master/graph/badge.svg)](https://codecov.io/gh/tsostarics/sostools?branch=master)
 <!-- badges: end -->
 
 This is just a collection of functions I use in my research that I use

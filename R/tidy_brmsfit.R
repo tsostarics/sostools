@@ -10,35 +10,35 @@
 #' (that function doesn't work with models lacking random effects, go figure)
 #'
 #' @param model brmsfit object
+#' @param fix.intercept whether Intercept should be changed to (Intercept)
 #' @param include_prior Should description of priors be included?
-#' @param probs probabilities for credible intervals, defaults to 95 percent
-#'
+#' @param ... Other options to pass to broom.mixed::tidy
+
 #' @return Tidy dataframe of fixed effects for use with other functions in this package
 #'
 #' @export
-tidy_brmsfit <- function(model, include_prior = TRUE, probs = c(0.025, 0.975)) {
-  if (class(model) != 'brmsfit') stop("brmsfit object passed to tidy_brmsfit")
+tidy_brmsfit <- function(model, include_prior = TRUE, fix.intercept = FALSE, ...) {
+  if (class(model) != 'brmsfit') stop("non brmsfit object passed to tidy_brmsfit")
   requireNamespace("brms", quietly = TRUE)
+  requireNamespace("broom.mixed", quietly = TRUE)
 
-  # Put fixed effects in tidy format
-  mdl_summary <-
-    tibble::as_tibble(
-      brms::fixef(model, probs, robust = FALSE, summary = TRUE),
-      rownames = "term"
-    )
-  colnames(mdl_summary) <- tolower(colnames(mdl_summary))
+  which_effects <- "fixed"
+  has_ranef <- nrow(model[['ranef']]) != 0L
 
-  ## Get the correct column names for the confidence interval bounds
-  ci_lower_col <- paste0("q", probs[[1L]]*100)
-  ci_upper_col <- paste0("q", probs[[2L]]*100)
+  if (has_ranef)
+    which_effects <- c(which_effects, "ran_pars", ...)
+
+  mdl_summary <- broom.mixed::tidy(model,
+                                   effects = which_effects,
+                                   fix.intercept = fix.intercept)
 
   # Add confidence intervals
   mdl_summary <-
-    dplyr::transmute(mdl_summary, term, estimate, est.error,
+    dplyr::transmute(mdl_summary, term, estimate, est.error = std.error,
                      confint = paste0("[",
-                                      round(!!sym(ci_lower_col), 2L),
+                                      round(conf.low, 2L),
                                       ";",
-                                      round(!!sym(ci_upper_col), 2L),
+                                      round(conf.high, 2L),
                                       "]")
 
     )
@@ -53,7 +53,7 @@ tidy_brmsfit <- function(model, include_prior = TRUE, probs = c(0.025, 0.975)) {
 }
 
 .extract_priors <- function(model) {
-  priors <- prior_summary(model)
+  priors <- brms::prior_summary(model)
   # When priors aren't manually specified they're underlyingly "" and inherit from the default
   default_b_prior <- priors[['prior']][priors[["coef"]] == "" & priors[["class"]] == "b"]
   priors[['prior']][priors[['class']] == 'b' & priors[['prior']] == ""] <- default_b_prior

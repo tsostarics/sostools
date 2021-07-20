@@ -8,7 +8,11 @@
 #' @export
 contrasts_as_latex <- function(factor_col) {
   requireNamespace("MASS", quietly = TRUE)
-  value_matrix <- as.character(MASS::fractions(contrasts(factor_col)))
+  contrast_matrix <- contrasts(factor_col)
+  # Add this functionality in later, i don't feel like doing it rn bc i have to mess around with the dimnames
+  # if (hypotheses)
+  #   contrast_matrix <- .contrasts_to_hypotheses(contrast_matrix, nrow(contrast_matrix))
+  value_matrix <- as.character(MASS::fractions(contrast_matrix))
   value_matrix <- apply(value_matrix, c(1,2), .as_latex_frac)
   n_cols <- ncol(value_matrix)
   n_rows <- nrow(value_matrix)
@@ -22,12 +26,17 @@ contrasts_as_latex <- function(factor_col) {
                               collapse = "\t&\t"),
                        "char")
   value_rows <- paste(value_rows, collapse =  "\\\\\\\\\n")
-  alignment <- paste0(c("l", rep("c", n_cols)), collapse = "")
+  alignment <- paste0(c("l|", rep("c", n_cols)), collapse = "")
 
-  latex_table <- "\\begin{tabular}{ALIGNMENT}
+  latex_table <- "
+  \\begin{table}[htb]
+  \\centering
+  \\begin{tabular}{ALIGNMENT}
   HEADER
+  \\hline
   VALUES
-  \\end{tabular}"
+  \\end{tabular}
+  \\end{table}"
 
   latex_table <- gsub("ALIGNMENT", alignment, latex_table)
   latex_table <- gsub("HEADER", header_row, latex_table)
@@ -37,7 +46,7 @@ contrasts_as_latex <- function(factor_col) {
 
 .as_latex_frac <- function(fraction_string){
   requireNamespace("stringr", quietly = TRUE)
-  if (!grep("/",fraction_string))
+  if (!grepl("/",fraction_string))
     return(fraction_string)
 
   frac_values <- stringr::str_match_all(fraction_string, "(-?)(\\d)/(\\d)")[[1]][,2:4]

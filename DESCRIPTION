@@ -35,7 +35,8 @@ Suggests:
     MASS,
     rmarkdown,
     brms,
-    bayestestR
+    bayestestR,
+    covr
 Config/testthat/edition: 3
 URL: https://github.com/tsostarics/sostools
 BugReports: https://github.com/tsostarics/sostools/issues

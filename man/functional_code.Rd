@@ -4,7 +4,12 @@
 \alias{functional_code}
 \title{Set contrast coding with function}
 \usage{
-functional_code(factor_col, coding_fx, reference_level = NA)
+functional_code(
+  factor_col,
+  coding_fx,
+  reference_level = NA,
+  set_intercept = NA
+)
 }
 \arguments{
 \item{factor_col}{Factor column}
@@ -13,6 +18,10 @@ functional_code(factor_col, coding_fx, reference_level = NA)
 
 \item{reference_level}{Label of the desired reference level, will default to
 the first label in dimnames of the original contrasts}
+
+\item{set_intercept}{Label of the desired intercept level, will default to
+scheme's default (typically grand mean, unless using contr.treatment, which does
+the reference level)}
 }
 \description{
 Set contrast coding with function

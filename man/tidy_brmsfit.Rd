@@ -4,14 +4,16 @@
 \alias{tidy_brmsfit}
 \title{Brmsfit fixed effects as tidy data frame}
 \usage{
-tidy_brmsfit(model, include_prior = TRUE, probs = c(0.025, 0.975))
+tidy_brmsfit(model, include_prior = TRUE, fix.intercept = FALSE, ...)
 }
 \arguments{
 \item{model}{brmsfit object}
 
 \item{include_prior}{Should description of priors be included?}
 
-\item{probs}{probabilities for credible intervals, defaults to 95 percent}
+\item{fix.intercept}{whether Intercept should be changed to (Intercept)}
+
+\item{...}{Other options to pass to broom.mixed::tidy}
 }
 \value{
 Tidy dataframe of fixed effects for use with other functions in this package
