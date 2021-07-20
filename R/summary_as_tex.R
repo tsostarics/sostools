@@ -100,11 +100,7 @@ summary_as_tex <- function(model,
   ci_label <- paste0(ci_level * 100, "\\% CI")
 
   if (class(use_ROPE)[[1L]] == "rope"){
-<<<<<<< HEAD
     add_rope <- dplyr::transmute(use_ROPE |> dplyr::group_by(Parameter),
-=======
-    add_rope <- dplyr::transmute(use_ROPE,
->>>>>>> b481d067f76b61cc3d85d93f32de37a00c4e57ad
                                  term = gsub("^b_", "", Parameter),
                                  pct = round(ROPE_Percentage * 100, 2))
     add_rope[["term"]] <- .fix_interaction_labels(use_ROPE, model)
