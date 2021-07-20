@@ -55,10 +55,11 @@ summary_as_tex <- function(model,
     summary_table <-
       summary_table |>
       dplyr::filter(is.na(group)) |> # note this will cause issues for non mixed models
-    dplyr::select(-effect, -group)
-    }
+      dplyr::select(-effect, -group)
+  }
 
-  summary_table |>
+  latex_table <-
+    summary_table |>
     knitr::kable(digits = c(0,2,2,2,3),
                  col.names = c("Term",
                                "Estimate",
@@ -72,6 +73,10 @@ summary_as_tex <- function(model,
                  longtable = FALSE,
                  table.envir = "table",
                  label = label)
+
+  latex_table <- gsub(r"(begin\{table\})", r"(begin\{table\}\[htbp\])", latex_table)
+  latex_table
+
 }
 
 # summary_as_tex.lm <- function(model, statistic = "$t$", caption = NA, label = NA){
@@ -127,7 +132,7 @@ summary_as_tex <- function(model,
   latex_table <- dplyr::mutate(coefs, term = gsub("_","\\\\_",term))
   suppressWarnings(
     if (!is.na(add_rope))
-    add_rope <- dplyr::mutate(add_rope, term = gsub("_","\\\\_",term))
+      add_rope <- dplyr::mutate(add_rope, term = gsub("_","\\\\_",term))
   )
   digits <- c(0,2,2,0)
   if (use_ROPE){
@@ -151,9 +156,9 @@ summary_as_tex <- function(model,
                               longtable = FALSE,
                               table.envir = "table",
                               label = label)
-
-  gsub(r"(\{\})","",latex_table)
-
+  latex_table <- gsub(r"(\{\})","",latex_table)
+  latex_table <- gsub(r"(begin\{table\})", r"(begin\{table\}\[htbp\])", latex_table)
+  latex_table
 }
 
 .fix_interaction_labels <- function(rope, model){
