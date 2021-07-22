@@ -9,6 +9,8 @@
   caption = NA,
   label = NA,
   include_prior = FALSE,
+  table.envir = "table",
+  tabular.envir = "tabular",
   ci_level = 0.95,
   use_ROPE = FALSE
 )
@@ -21,6 +23,10 @@
 \item{label}{Label for LaTeX cross referencing}
 
 \item{include_prior}{Logical, should priors be included in table?}
+
+\item{table.envir}{Table environment to use}
+
+\item{tabular.envir}{Tabular environment to use}
 
 \item{ci_level}{Defaults to .95}
 

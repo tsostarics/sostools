@@ -10,6 +10,8 @@ summary_as_tex(
   statistic = "$z$",
   caption = NA,
   label = NA,
+  table.envir = "table",
+  tabular.envir = "tabular",
   include_prior = FALSE,
   ci_level = 0.95,
   use_ROPE = FALSE
@@ -26,6 +28,12 @@ in $s}
 \item{caption}{Caption to use for the table}
 
 \item{label}{Label to use when referencing the table}
+
+\item{table.envir}{LaTeX table environment to use, defaults to table, change
+not implemented yet}
+
+\item{tabular.envir}{LaTeX tabular environment to use, defaults to table, can
+be changed to tabular*}
 
 \item{include_prior}{Should priors be included? (only if model is brmsfit)}
 

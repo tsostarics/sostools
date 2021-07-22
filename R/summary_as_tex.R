@@ -16,6 +16,10 @@
 #' @param use_ROPE ROPE object from bayestestR::rope, or TRUE to run this with the
 #' default settings. Adds the % in ROPE to table after confidence intervals. FALSE
 #' to not include. (only if model is brmsfit)
+#' @param table.envir LaTeX table environment to use, defaults to table, change
+#' not implemented yet
+#' @param tabular.envir LaTeX tabular environment to use, defaults to table, can
+#' be changed to tabular*
 #'
 #' @export
 #' @importFrom stats p.adjust
@@ -24,17 +28,25 @@ summary_as_tex <- function(model,
                            statistic = "$z$",
                            caption = NA,
                            label = NA,
+                           table.envir = "table",
+                           tabular.envir = "tabular",
                            include_prior = FALSE,
                            ci_level = .95,
                            use_ROPE = FALSE){
   requireNamespace("knitr", quietly = TRUE)
   requireNamespace("scales", quietly = TRUE)
 
-  if (class(model)[[1L]] == "clmm")
-    return(.summary_as_tex.clmm(model, correct, statistic, caption, label))
+  change_call <- match.call()
+  if (class(model)[[1L]] == "clmm"){
+    # I really need to learn to implement usemethod honestly
+    change_call[[1]] <- sym(".summary_as_tex.clmm")
+    return(eval(change_call))
+  }
 
-  if (class(model)[[1L]] == 'brmsfit')
-    return(.summary_as_tex.brmsfit(model, caption, label, include_prior, ci_level, use_ROPE))
+  if (class(model)[[1L]] == 'brmsfit') {
+    change_call[[1]] <- sym(".summary_as_tex.clmm")
+    return(eval(change_call))
+  }
   tidy_fx <- .get_tidy_fx(model)
 
   if (knitr::is_html_output())
@@ -74,9 +86,18 @@ summary_as_tex <- function(model,
                  table.envir = "table",
                  label = label)
 
-  latex_table <- gsub(r"(begin\{table\})", r"(begin\{table\}\[htbp\])", latex_table)
-  latex_table
+  .cleanup_latex_table(latex_table, table.envir, tabular.envir)
 
+}
+
+.cleanup_latex_table <- function(latex_table, table.envir, tabular.envir) {
+  latex_table <- gsub(r"(begin\{table\})", r"(begin\{table\}\[htbp\])", latex_table)
+
+  if (tabular.envir == "tabular*"){
+    latex_table <- gsub(r"(begin\{tabular\}\[t\]\{l)", r"(begin\{tabular*\}\{\\textwidth\}\{l@\{\\extracolsep\{\\fill\}\})", latex_table)
+    latex_table <- gsub(r"(end\{tabular\})",r"(end\{tabular*\})", latex_table)
+  }
+  latex_table
 }
 
 # summary_as_tex.lm <- function(model, statistic = "$t$", caption = NA, label = NA){
@@ -93,9 +114,18 @@ summary_as_tex <- function(model,
 #' @param use_ROPE ROPE object from bayestestR::rope, or TRUE to run this with the
 #' default settings. Adds the % in ROPE to table after confidence intervals. FALSE
 #' to not include.
+#' @param table.envir Table environment to use
+#' @param tabular.envir Tabular environment to use
 #'
 #' @return Formatted table
-.summary_as_tex.brmsfit <- function(model, caption = NA, label = NA, include_prior = FALSE, ci_level = .95, use_ROPE = FALSE){
+.summary_as_tex.brmsfit <- function(model,
+                                    caption = NA,
+                                    label = NA,
+                                    include_prior = FALSE,
+                                    table.envir = "table",
+                                    tabular.envir = "tabular",
+                                    ci_level = .95,
+                                    use_ROPE = FALSE){
   if (knitr::is_html_output())
     outformat  <-  "pipe"
   else
@@ -158,7 +188,7 @@ summary_as_tex <- function(model,
                               label = label)
   latex_table <- gsub(r"(\{\})","",latex_table)
   latex_table <- gsub(r"(begin\{table\})", r"(begin\{table\}\[htbp\])", latex_table)
-  latex_table
+  .cleanup_latex_table(latex_table, table.envir, tabular.envir)
 }
 
 .fix_interaction_labels <- function(rope, model){
@@ -175,8 +205,14 @@ summary_as_tex <- function(model,
     return(model_terms)
 }
 
-.summary_as_tex.clmm <- function(model, correct, statistic = "$z$", caption = NA, label = NA) {
-
+.summary_as_tex.clmm <- function(model,
+                                 correct = NA,
+                                 statistic = "$z$",
+                                 table.envir = "table",
+                                 tabular.envir = "tabular",
+                                 caption = NA,
+                                 label = NA) {
+  requireNamespace("ordinal", quietly = TRUE)
   if (knitr::is_html_output())
     outformat  <-  "pipe"
   else
@@ -187,7 +223,8 @@ summary_as_tex <- function(model,
   if (any(!is.na(correct)))
     coefs <- .adjust_pvals(coefs, correct)
 
-  coefs |>
+  latex_table <-
+    coefs |>
     dplyr::mutate(p.value = scales::pvalue(p.value),
                   term = gsub("_","\\\\_",term),
                   term = ifelse(coef.type == 'intercept',
@@ -208,6 +245,8 @@ summary_as_tex <- function(model,
                  longtable = FALSE,
                  table.envir = "table",
                  label = label)
+
+  .cleanup_latex_table(latex_table, table.envir, tabular.envir)
 }
 
 #' Add addlinespace commands to latex table
