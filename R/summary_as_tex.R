@@ -48,11 +48,7 @@ summary_as_tex <- function(model,
     return(eval(change_call))
   }
   tidy_fx <- .get_tidy_fx(model)
-
-  if (knitr::is_html_output())
-    outformat  <-  "pipe"
-  else
-    outformat <- "latex"
+  outformat <- .get_knitr_table_type()
 
   coefs <- tidy_fx(model)
 
@@ -90,6 +86,13 @@ summary_as_tex <- function(model,
 
 }
 
+.get_knitr_table_type <- function() {
+  if (knitr::is_html_output())
+    return("pipe")
+  else
+    return("latex")
+}
+
 .cleanup_latex_table <- function(latex_table, table.envir, tabular.envir) {
   latex_table <- gsub(r"(begin\{table\})", r"(begin\{table\}\[htbp\])", latex_table)
 
@@ -103,93 +106,6 @@ summary_as_tex <- function(model,
 # summary_as_tex.lm <- function(model, statistic = "$t$", caption = NA, label = NA){
 #
 # }
-
-#' BRMS Table output
-#'
-#' @param model brmsfit object
-#' @param caption Caption for LaTeX table
-#' @param label Label for LaTeX cross referencing
-#' @param include_prior Logical, should priors be included in table?
-#' @param ci_level Defaults to .95
-#' @param use_ROPE ROPE object from bayestestR::rope, or TRUE to run this with the
-#' default settings. Adds the % in ROPE to table after confidence intervals. FALSE
-#' to not include.
-#' @param table.envir Table environment to use
-#' @param tabular.envir Tabular environment to use
-#'
-#' @return Formatted table
-.summary_as_tex.brmsfit <- function(model,
-                                    caption = NA,
-                                    label = NA,
-                                    include_prior = FALSE,
-                                    table.envir = "table",
-                                    tabular.envir = "tabular",
-                                    ci_level = .95,
-                                    use_ROPE = FALSE){
-  if (knitr::is_html_output())
-    outformat  <-  "pipe"
-  else
-    outformat <- "latex"
-
-  coefs <- tidy_brmsfit(model, include_prior)
-  ci_label <- paste0(ci_level * 100, "\\% CI")
-
-  if (class(use_ROPE)[[1L]] == "rope"){
-    add_rope <- dplyr::transmute(use_ROPE |> dplyr::group_by(Parameter),
-                                 term = gsub("^b_", "", Parameter),
-                                 pct = round(ROPE_Percentage * 100, 2))
-    add_rope[["term"]] <- .fix_interaction_labels(use_ROPE, model)
-    add_rope[['Parameter']] <- NULL
-    use_ROPE <- TRUE
-  } else if (use_ROPE){
-    requireNamespace('bayestestR', quietly = TRUE)
-    add_rope <- dplyr::transmute(bayestestR::rope(model) |> dplyr::group_by(Parameter),
-                                 term = gsub("^b_", "", Parameter),
-                                 pct = round(ROPE_Percentage * 100, 2))
-    add_rope[["term"]] <- .fix_interaction_labels(use_ROPE, model)
-    add_rope[['Parameter']] <- NULL
-
-  } else {
-    add_rope <- NA
-    use_ROPE <- FALSE
-  }
-  header_labels <- c("Term",
-                     "Estimate",
-                     "Est. Error",
-                     ci_label)
-
-
-  latex_table <- dplyr::mutate(coefs, term = gsub("_","\\\\_",term))
-  suppressWarnings(
-    if (!is.na(add_rope))
-      add_rope <- dplyr::mutate(add_rope, term = gsub("_","\\\\_",term))
-  )
-  digits <- c(0,2,2,0)
-  if (use_ROPE){
-    latex_table <-
-      dplyr::left_join(latex_table, add_rope, by = 'term', copy = TRUE) |>
-      dplyr::relocate(pct, .after = 'confint')
-    header_labels <- c(header_labels, "\\% in ROPE")
-    digits <- c(digits,2)
-  }
-  if (include_prior){
-    header_labels <- c(header_labels, "Prior")
-    digits <- c(digits,0)
-  }
-  latex_table <- knitr::kable(latex_table,
-                              digits = digits,
-                              col.names = header_labels,
-                              caption = caption,
-                              escape = FALSE,
-                              format = outformat,
-                              booktabs = TRUE,
-                              longtable = FALSE,
-                              table.envir = "table",
-                              label = label)
-  latex_table <- gsub(r"(\{\})","",latex_table)
-  latex_table <- gsub(r"(begin\{table\})", r"(begin\{table\}\[htbp\])", latex_table)
-  .cleanup_latex_table(latex_table, table.envir, tabular.envir)
-}
 
 .fix_interaction_labels <- function(rope, model){
   rope_terms <- gsub("^b_", "", rope[['Parameter']])
@@ -205,49 +121,6 @@ summary_as_tex <- function(model,
     return(model_terms)
 }
 
-.summary_as_tex.clmm <- function(model,
-                                 correct = NA,
-                                 statistic = "$z$",
-                                 table.envir = "table",
-                                 tabular.envir = "tabular",
-                                 caption = NA,
-                                 label = NA) {
-  requireNamespace("ordinal", quietly = TRUE)
-  if (knitr::is_html_output())
-    outformat  <-  "pipe"
-  else
-    outformat <- "latex"
-
-  coefs <- broom::tidy(model) # might need to change
-
-  if (any(!is.na(correct)))
-    coefs <- .adjust_pvals(coefs, correct)
-
-  latex_table <-
-    coefs |>
-    dplyr::mutate(p.value = scales::pvalue(p.value),
-                  term = gsub("_","\\\\_",term),
-                  term = ifelse(coef.type == 'intercept',
-                                paste0("$\\theta_{",term,"}$"),
-                                term)
-    ) |>
-    dplyr::select(-coef.type) |>
-    knitr::kable(digits = c(0,2,2,2,0),
-                 col.names = c("Term",
-                               "Estimate",
-                               "SE",
-                               "$z$",
-                               "$p$"),
-                 caption = caption,
-                 escape = FALSE,
-                 format = outformat,
-                 booktabs = TRUE,
-                 longtable = FALSE,
-                 table.envir = "table",
-                 label = label)
-
-  .cleanup_latex_table(latex_table, table.envir, tabular.envir)
-}
 
 #' Add addlinespace commands to latex table
 #'
