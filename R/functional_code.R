@@ -12,6 +12,25 @@
 #' @importFrom stats contr.helmert contr.poly contr.treatment
 functional_code <- function(factor_col, coding_fx, reference_level=NA, set_intercept = NA) {
   labels <- .get_dimnames(factor_col)
+  reference_i <- .get_reference_index(labels, reference_level, coding_fx)
+
+  n_levels <- length(labels[[1L]])
+  new_contrasts <- coding_fx(n_levels)
+  new_contrasts <- .switch_reference_level(new_contrasts,
+                                           coding_fx,
+                                           n_levels,
+                                           reference_i)
+
+  dimnames(new_contrasts) <- labels
+  new_contrasts <- .reset_comparison_labels(new_contrasts)
+
+  if (!is.na(set_intercept))
+    return(.set_intercept(new_contrasts, set_intercept))
+
+  return(new_contrasts)
+}
+
+.get_reference_index <- function(labels, reference_level, coding_fx) {
   reference_i <- NA
   if (is.na(reference_level))
     reference_i <- which(labels[[1L]] == labels[[1L]][1L])
@@ -25,21 +44,7 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
 
   if (identical(reference_i, integer(0)))
     stop("Reference level not found in contrast dimension names")
-
-  n_levels <- length(labels[[1L]])
-
-  new_contrasts <- .switch_reference_level(coding_fx(n_levels),
-                                           coding_fx,
-                                           n_levels,
-                                           reference_i)
-
-  dimnames(new_contrasts) <- labels
-  new_contrasts <- .reset_comparison_labels(new_contrasts)
-
-  if (!is.na(set_intercept))
-    return(.set_intercept(new_contrasts, set_intercept))
-
-  return(new_contrasts)
+  reference_i
 }
 
 .get_dimnames <- function(factor_col) {
@@ -74,13 +79,13 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
 .check_non_references <- function(coding_fx) {
   any(
     vapply(c(backward_difference_code,
-           forward_difference_code,
-           helmert_code,
-           reverse_helmert_code,
-           contr.poly),
-         function(x)
-           identical(coding_fx, x),
-         TRUE)
+             forward_difference_code,
+             helmert_code,
+             reverse_helmert_code,
+             contr.poly),
+           function(x)
+             identical(coding_fx, x),
+           TRUE)
   )
 }
 
