@@ -11,7 +11,7 @@
 #' @export
 #' @importFrom stats contr.helmert contr.poly contr.treatment
 functional_code <- function(factor_col, coding_fx, reference_level=NA, set_intercept = NA) {
-  labels <- dimnames(contrasts(factor_col))
+  labels <- .get_dimnames(factor_col)
   reference_i <- NA
   if (is.na(reference_level))
     reference_i <- which(labels[[1L]] == labels[[1L]][1L])
@@ -40,6 +40,15 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
     return(.set_intercept(new_contrasts, set_intercept))
 
   return(new_contrasts)
+}
+
+.get_dimnames <- function(factor_col) {
+  labels <- dimnames(contrasts(factor_col))
+  if (is.null(labels[[1L]]))
+    labels[[1L]] <- levels(factor_col)
+  if (is.null(labels[[2L]]))
+    labels[[2L]] <- levels(factor_col)[-1L]
+  labels
 }
 
 .set_intercept <- function(contrast_matrix, intercept_level) {

@@ -80,8 +80,16 @@ enlist_contrasts <- function(model_data, ...) {
 #' @param verbose Should message be sent? Defaults to TRUE
 .convert_to_factors <- function(model_data, vars_in_model, verbose = TRUE) {
   which_not_factors <- vapply(model_data[vars_in_model],
-                              function(x) class(x)[[1L]] != "factor",
+                              function(x) !is.factor(x),
                               TRUE)
+
+  # Send message if the factor is ordered (i dont think it's an issue but idk?)
+  which_are_ordered <- vapply(model_data[vars_in_model], is.ordered, TRUE)
+  any_ordered <- any(which_are_ordered)
+  if (verbose & any_ordered) {
+    ordered_names <- crayon::blue(paste(names(which_are_ordered)[which_are_ordered], collapse = ' '))
+    message(glue::glue("These factors are also ordered: {ordered_names}"))
+  }
 
   # If all specified variables are already factors, we're good
   if (all(!which_not_factors))
@@ -89,6 +97,7 @@ enlist_contrasts <- function(model_data, ...) {
 
   should_be_factors <- names(which_not_factors)[which_not_factors]
   varnames <- crayon::blue(paste(should_be_factors, collapse = ' '))
+
   if (verbose)
     message(glue::glue("Converting these to factors: {varnames}"))
 
