@@ -31,7 +31,6 @@
 #' enlist_contrasts(my_df,
 #'     gear ~ scaled_sum_code + 5,
 #'     carb ~ contr.sum + 6)
-#'
 #' # Manually specifying matrix also works
 #' enlist_contrasts(my_df,
 #'     gear ~ matrix(c(1,-1,0,0,-1,1), nrow = 3),
@@ -52,10 +51,11 @@
 #' enlist_contrasts(my_df, gear ~ scaled_sum_code)
 #'
 enlist_contrasts <- function(model_data, ...) {
-  formulas <- lapply(rlang::enexprs(...), as.character)
-
-  vars_in_model <- vapply(formulas, function(x) x[[2L]] %in% names(model_data), TRUE)
-  names(vars_in_model) <- vapply(formulas, function(x) x[[2L]], "char")
+  formulas <- suppressWarnings(rlang::dots_splice(...)) # outer names warning?
+  char_formulas <- lapply(formulas, as.character)
+  formula_indices <- seq_along(char_formulas)
+  vars_in_model <- vapply(char_formulas, function(x) x[[2L]] %in% names(model_data), TRUE)
+  names(vars_in_model) <- vapply(char_formulas, function(x) x[[2L]], "char")
 
   model_data <- .convert_to_factors(model_data, names(vars_in_model))
 
@@ -66,7 +66,13 @@ enlist_contrasts <- function(model_data, ...) {
                     .trim = FALSE))
 
   stats::setNames(
-    lapply(formulas, function(x) .process_contrasts(model_data, x)),
+    lapply(formula_indices,
+           function(x)
+             .process_contrasts(model_data,
+                                char_formulas[[x]],
+                                var_envir = rlang::get_env(formulas[[x]]) # Reference value bindings
+                                )
+           ),
     names(vars_in_model)
   )
 }
@@ -110,9 +116,10 @@ enlist_contrasts <- function(model_data, ...) {
 #'
 #' @param model_data Data frame with factor column
 #' @param char_formula character conversion of formula
+#' @param var_envir Environment in which the reference variables can be found
 #'
 #' @return A contrast matrix
-.process_contrasts <- function(model_data, char_formula) {
+.process_contrasts <- function(model_data, char_formula, var_envir) {
   reference_specified <- grepl("\\+",char_formula[[3L]])
   coding_scheme <- strsplit(char_formula[[3L]], " \\+|\\* ", perl = TRUE)[[1L]]
   coding_scheme <- .scrub_scheme(coding_scheme)
@@ -123,13 +130,13 @@ enlist_contrasts <- function(model_data, ...) {
   # If three arguments are specified, 2nd is ref level & 3rd is intercept level
   # otherwise the second level depends on whether + or * was used
   if (arg_length == 3) {
-    reference_level <- .get_if_exists(coding_scheme[[2L]])
-    intercept_level <- .get_if_exists(coding_scheme[[3L]])
+    reference_level <- .get_if_exists(coding_scheme[[2L]], var_envir)
+    intercept_level <- .get_if_exists(coding_scheme[[3L]], var_envir)
   } else if (arg_length == 2) {
     if (reference_specified)
-      reference_level <- .get_if_exists(coding_scheme[[2L]])
+      reference_level <- .get_if_exists(coding_scheme[[2L]], var_envir)
     else
-      intercept_level <- .get_if_exists(coding_scheme[[2L]])
+      intercept_level <- .get_if_exists(coding_scheme[[2L]], var_envir)
   }
 
   # Additional handling if raw matrix is passed
@@ -158,9 +165,9 @@ enlist_contrasts <- function(model_data, ...) {
   vapply(coding_scheme, function(x) gsub(" *", "", x), "char", USE.NAMES = FALSE)
 }
 
-.get_if_exists <- function(scheme_argument) {
-  if (exists(scheme_argument))
-    return(get(scheme_argument))
+.get_if_exists <- function(scheme_argument, var_envir) {
+  if (exists(scheme_argument,where = var_envir))
+    return(get(scheme_argument, envir = var_envir))
   gsub('"| ', '', scheme_argument)
 }
 

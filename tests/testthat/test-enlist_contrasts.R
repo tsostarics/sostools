@@ -50,8 +50,8 @@ test_that("setting both reference and intercept works", {
   my_df$carb = factor(my_df$carb)
   expect_equal(
     enlist_contrasts(my_df,
-                   gear ~ contr.treatment,
-                   carb ~ contr.treatment)[[2L]],
+                     gear ~ contr.treatment,
+                     carb ~ contr.treatment)[[2L]],
     enlist_contrasts(my_df,
                      gear ~ contr.treatment,
                      carb ~ scaled_sum_code + 1 * 1)[[2L]]
@@ -62,8 +62,8 @@ test_that("setting both reference and intercept works", {
 
 test_that("matrix passing works", {
   my_df <- mtcars
-  my_df$gear = factor(my_df$gear)
-  my_df$carb = factor(my_df$carb)
+  my_df$gear <-  factor(my_df$gear)
+  my_df$carb <-  factor(my_df$carb)
 
   reference <- enlist_contrasts(my_df,
                                 gear ~ contr.sum + 4,
@@ -74,6 +74,25 @@ test_that("matrix passing works", {
                      gear ~ matrix(c(1,-1,0,0,-1,1), nrow = 3),
                      carb ~ forward_difference_code)[[1L]],
     reference
-    )
+  )
+
+})
+
+test_that("environment handling works", {
+  my_df <- mtcars
+  my_df$gear <-  factor(my_df$gear)
+  gear_levels <- levels(my_df$gear)
+
+  output <- lapply(gear_levels,
+                   function(ref_level)
+                     set_contrasts(my_df,
+                                   gear ~ scaled_sum_code + ref_level * ref_level)) %>%
+    lapply(function(set_df) contrasts(set_df$gear))
+  reference <-
+    list(matrix(c(0, 1, 0, 0, 0, 1), nrow = 3),
+         matrix(c(1, 0, 0, 0, 0, 1), nrow = 3),
+         matrix(c(1, 0, 0, 0, 1, 0), nrow = 3))
+
+  expect_equal(output, reference, ignore_attr = TRUE)
 
 })

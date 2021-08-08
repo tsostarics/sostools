@@ -40,7 +40,6 @@ enlist_contrasts(my_df,
 enlist_contrasts(my_df,
     gear ~ scaled_sum_code + 5,
     carb ~ contr.sum + 6)
-
 # Manually specifying matrix also works
 enlist_contrasts(my_df,
     gear ~ matrix(c(1,-1,0,0,-1,1), nrow = 3),
