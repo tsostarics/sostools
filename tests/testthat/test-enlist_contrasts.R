@@ -1,20 +1,6 @@
-test_that(".check_remaining_factors works", {
-  tst_data <-
-    tibble::tribble(
-      ~two, ~three, ~four,
-      "a",    "a",   "a",
-      "b",    "b",   "b",
-      "a",    "c",   "c",
-      "b",    "a",   "d"
-    ) %>%
-    dplyr::mutate(dplyr::across(tidyselect::everything(), factor))
 
-  expect_message(.check_remaining_factors(tst_data, "a"),
-                 "You didn't set these factors, expect dummy coding: two three four")
 
-})
-
-test_that("enlist_contrasts names works", {
+test_that("Names of resulting list of contrasts correct", {
   tst_data <-
     tibble::tribble(
       ~two, ~three, ~four,
@@ -29,7 +15,7 @@ test_that("enlist_contrasts names works", {
                c("two", "three", "four"))
 })
 
-test_that("enlist_contrasts column not found", {
+test_that("Throw error when factor column not found in model data frame", {
   tst_data <-
     tibble::tribble(
       ~two, ~three, ~four,
@@ -40,10 +26,11 @@ test_that("enlist_contrasts column not found", {
     ) %>%
     dplyr::mutate(dplyr::across(tidyselect::everything(), factor))
 
+  # Default error message works fine, no need to specify it to something else
   expect_error(enlist_contrasts(tst_data, foo~contr.sum),regexp = "Can't subset columns")
 })
 
-test_that("setting both reference and intercept works", {
+test_that("Setting both reference and intercept simultaneously with + and * works", {
 
   my_df <- mtcars
   my_df$gear = factor(my_df$gear)
@@ -60,7 +47,7 @@ test_that("setting both reference and intercept works", {
 }
 )
 
-test_that("matrix passing works", {
+test_that("Passing a raw matrix call to set contrasts works", {
   my_df <- mtcars
   my_df$gear <-  factor(my_df$gear)
   my_df$carb <-  factor(my_df$carb)
@@ -78,21 +65,36 @@ test_that("matrix passing works", {
 
 })
 
-test_that("environment handling works", {
+test_that("Environment handling with programmatically set reference levels works", {
   my_df <- mtcars
   my_df$gear <-  factor(my_df$gear)
   gear_levels <- levels(my_df$gear)
 
+  # Apply scheme multiple times w/ different reference levels, then check contrasts
   output <- lapply(gear_levels,
                    function(ref_level)
                      set_contrasts(my_df,
                                    gear ~ scaled_sum_code + ref_level * ref_level)) %>%
     lapply(function(set_df) contrasts(set_df$gear))
-  reference <-
-    list(matrix(c(0, 1, 0, 0, 0, 1), nrow = 3),
-         matrix(c(1, 0, 0, 0, 0, 1), nrow = 3),
-         matrix(c(1, 0, 0, 0, 1, 0), nrow = 3))
 
-  expect_equal(output, reference, ignore_attr = TRUE)
+  # Row names are all the same, col names vary depending on reference level
+  reference <-
+    list(matrix(c(0, 1, 0, 0, 0, 1), nrow = 3,dimnames = list(3:5, c(4,5))),
+         matrix(c(1, 0, 0, 0, 0, 1), nrow = 3,dimnames = list(3:5, c(3,5))),
+         matrix(c(1, 0, 0, 0, 1, 0), nrow = 3,dimnames = list(3:5, c(3,4))))
+
+  expect_equal(output, reference)
 
 })
+
+test_that("Environment handling when piping with magrittr works", {
+  my_df <- mtcars
+  my_df$gear <-  factor(my_df$gear)
+  magrittr_df <- my_df %>% set_contrasts(gear ~ helmert_code)
+  magrittr_contrasts <- my_df %>% enlist_contrasts(gear ~ helmert_code)
+  native_df <- set_contrasts(my_df,gear ~ helmert_code)
+
+  expect_equal(contrasts(native_df$gear), contrasts(magrittr_df$gear))
+  expect_equal(contrasts(native_df$gear), magrittr_contrasts[[1L]])
+})
+

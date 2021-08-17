@@ -12,6 +12,8 @@
 #' @param ... A series of 2 sided formulas with factor name on the LHS and
 #' desired contrast scheme on the RHS, reference levels can be set with + and the
 #' intercept can be overwritten with * (+ should come first if both are set)
+#' @param verbose Should messages be sent to user? Defaults to TRUE, MUST be
+#' a named argument, or it will get parsed as part of ...
 #'
 #' @return List of named contrast matrices
 #' @export
@@ -50,21 +52,24 @@
 #' # Will inform you if there are factors you didn't set
 #' enlist_contrasts(my_df, gear ~ scaled_sum_code)
 #'
-enlist_contrasts <- function(model_data, ...) {
+enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
+  # Get the formulas from the dots into list and character formats to work with
   formulas <- suppressWarnings(rlang::dots_splice(...)) # outer names warning?
   char_formulas <- lapply(formulas, as.character)
-  formula_indices <- seq_along(char_formulas)
+
+  # Extract which factor columns are attempting to be set
   vars_in_model <- vapply(char_formulas, function(x) x[[2L]] %in% names(model_data), TRUE)
   names(vars_in_model) <- vapply(char_formulas, function(x) x[[2L]], "char")
 
-  model_data <- .convert_to_factors(model_data, names(vars_in_model))
+  model_data <- .convert_to_factors(model_data, names(vars_in_model), verbose)
 
-  .check_remaining_factors(model_data, names(vars_in_model))
+  .msg_if_remaining_factors(model_data, names(vars_in_model))
 
   if (!all(vars_in_model))
     stop(glue::glue("{names(vars_in_model)[!vars_in_model]} not found in model data\n",
                     .trim = FALSE))
 
+  formula_indices <- seq_along(char_formulas)
   stats::setNames(
     lapply(formula_indices,
            function(x)
@@ -83,32 +88,26 @@ enlist_contrasts <- function(model_data, ...) {
 #'
 #' @param model_data Model data
 #' @param vars_in_model variables specified for contrast coding from formulas
-#' @param verbose Should message be sent? Defaults to TRUE
+#' @param verbose Should messages be sent? Defaults to TRUE
 .convert_to_factors <- function(model_data, vars_in_model, verbose = TRUE) {
   which_not_factors <- vapply(model_data[vars_in_model],
                               function(x) !is.factor(x),
                               TRUE)
 
-  # Send message if the factor is ordered (i dont think it's an issue but idk?)
-  which_are_ordered <- vapply(model_data[vars_in_model], is.ordered, TRUE)
-  any_ordered <- any(which_are_ordered)
-  if (verbose & any_ordered) {
-    ordered_names <- crayon::blue(paste(names(which_are_ordered)[which_are_ordered], collapse = ' '))
-    message(glue::glue("These factors are also ordered: {ordered_names}"))
-  }
+  # Message user if they're resetting an ordered column
+  if (verbose) .msg_if_ordered_reset(model_data, vars_in_model)
 
-  # If all specified variables are already factors, we're good
+  # If all specified variables are already factors, no need for coercion
   if (all(!which_not_factors))
     return(model_data)
 
-  should_be_factors <- names(which_not_factors)[which_not_factors]
-  varnames <- crayon::blue(paste(should_be_factors, collapse = ' '))
+  # Coerce specified columns to factor data type, send message if needed
+  which_to_factors <- names(which_not_factors)[which_not_factors]
+  if (verbose) .msg_if_coerced_to_factors(which_to_factors)
 
-  if (verbose)
-    message(glue::glue("Converting these to factors: {varnames}"))
-
-  dplyr::mutate(model_data, dplyr::across(dplyr::all_of(should_be_factors), factor))
+  dplyr::mutate(model_data, dplyr::across(dplyr::all_of(which_to_factors), factor))
 }
+
 
 #' Pass arguments to contrast code
 #'
@@ -171,24 +170,3 @@ enlist_contrasts <- function(model_data, ...) {
   gsub('"| ', '', scheme_argument)
 }
 
-#' Check for unspecified factors
-#'
-#' Sends a message if the user has factor columns in their model data frame
-#' that weren't specified with the others.
-#'
-#' @param model_data Model data
-#' @param specified_vars variables specified by the user from formulas
-#'
-#' @return nothing, just sends a message if needed
-.check_remaining_factors <- function(model_data, specified_vars) {
-  column_classes <- lapply(model_data, class)
-  factor_cols <- column_classes == "factor"
-  factor_cols <- factor_cols[factor_cols]
-  col_names <- names(factor_cols)[factor_cols]
-
-  remaining_factors <- factor_cols[!col_names %in% specified_vars]
-  if (any(remaining_factors)) {
-    varnames <- crayon::blue(paste(names(remaining_factors), collapse = " "))
-    message(glue::glue("You didn't set these factors, expect dummy coding: {varnames}"))
-  }
-}

@@ -11,7 +11,7 @@
 
 \item{vars_in_model}{variables specified for contrast coding from formulas}
 
-\item{verbose}{Should message be sent? Defaults to TRUE}
+\item{verbose}{Should messages be sent? Defaults to TRUE}
 }
 \description{
 Helper to convert columns to factors if they aren't already

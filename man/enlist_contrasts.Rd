@@ -4,7 +4,7 @@
 \alias{enlist_contrasts}
 \title{List of contrast matrices}
 \usage{
-enlist_contrasts(model_data, ...)
+enlist_contrasts(model_data, ..., verbose = TRUE)
 }
 \arguments{
 \item{model_data}{Data frame you intend on passing to your model}
@@ -12,6 +12,9 @@ enlist_contrasts(model_data, ...)
 \item{...}{A series of 2 sided formulas with factor name on the LHS and
 desired contrast scheme on the RHS, reference levels can be set with + and the
 intercept can be overwritten with * (+ should come first if both are set)}
+
+\item{verbose}{Should messages be sent to user? Defaults to TRUE, MUST be
+a named argument, or it will get parsed as part of ...}
 }
 \value{
 List of named contrast matrices
