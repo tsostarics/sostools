@@ -12,6 +12,7 @@
 #' @return A data frame with estimates and confidence intervals for each scale response
 #' @export
 test_propodds <- function(ord_data, model_formula) {
+  requireNamespace("ordinal", quietly = TRUE)
   model_formula <- as.character(model_formula)
   is_mixed <- grepl("\\|", model_formula[[3L]])
   if (is_mixed)
