@@ -83,6 +83,7 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
 }
 
 .check_non_references <- function(coding_fx) {
+  # Evaluates whether a contrast scheme lacking a reference level was passed
   any(
     vapply(c(backward_difference_code,
              forward_difference_code,

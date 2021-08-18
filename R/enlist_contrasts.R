@@ -109,7 +109,7 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
   # get("columnname", model_data) works the same as model_data$columnname
   contrast_code(
     factor_col = get(params[["factor_col"]], model_data),
-    code_by = get(coding_scheme), # May need to
+    code_by = get(coding_scheme),
     reference_level = .get_if_exists(params[["reference_level"]], var_envir),
     set_intercept = .get_if_exists(params[["intercept_level"]], var_envir),
     drop_trends = .get_if_exists(params[["drop_trends"]], var_envir)

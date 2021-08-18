@@ -8,7 +8,7 @@
 #'
 #' @return A list of parameters to use for a contrast_code call
 .parse_formula <- function(raw_formula, has_matrix = FALSE) {
-  no_matrix_string <- char_formula <-  deparse(raw_formula)
+  no_matrix_string <- char_formula <-  deparse1(raw_formula)
 
   call_parameters <-
     list("factor_col" = NA,
@@ -17,8 +17,7 @@
          "drop_trends" = NA)
 
   if (has_matrix) {
-    call_parameters["code_by"] <- "use_matrix"
-    no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",deparse(raw_formula))
+    no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",deparse1(raw_formula))
   }
 
   .check_if_valid_formula(raw_formula, char_formula, no_matrix_string)
@@ -54,7 +53,7 @@
 #'
 #' @return Nothing, throws an error if any are found
 .check_if_valid_formula <- function(formula, char_formula, no_matrix_string) {
-  if (length(formula) == 1)
+  if (length(formula) != 3L)
     stop("Formula must be two sided.")
   if (grepl("[*+-][^~]+~",no_matrix_string))
     stop("Formula must have 1 variable name on left hand side.")
@@ -64,6 +63,7 @@
     stop("You cannot use the ^ or %in% operators in this formula")
   if (grepl("[^-] [^ ]+:[^ ]+", no_matrix_string))
     stop("Sequences of the form a:b may only be used to drop trends with the - operator")
-  if (grepl(" ~ [+-].+ ?", char_formula))
+  if (grepl(" ~ ([+-]|\\d)", char_formula))
     stop("First term in right hand side must be a contrast matrix or contrast function")
+  return(invisible(TRUE))
 }

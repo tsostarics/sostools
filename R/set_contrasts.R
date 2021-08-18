@@ -17,14 +17,18 @@
 #'
 #' @param model_data Data to be passed to the model, ensure factors are available
 #' @param ... Series of formulas denoting which contrast scheme to use for each factor
+#' @param verbose Whether messages should be displayed, default TRUE, must be named
+#' if passed
 #'
 #' @return the model_data dataframe, but with updated contrasts.
 #' @export
-set_contrasts <- function(model_data, ...) {
+set_contrasts <- function(model_data, ..., verbose = TRUE) {
   formulas <- rlang::dots_splice(...)
   formulas <- .reinstate_dropped_trends(formulas)
-  contrast_list <- enlist_contrasts(model_data, formulas)
+  contrast_list <- enlist_contrasts(model_data, formulas, verbose = verbose)
   factor_vars <- names(contrast_list)
+
+  # Always FALSE to avoid printing message twice
   model_data <- .convert_to_factors(model_data, factor_vars, verbose = FALSE)
 
   for (i in seq_along(contrast_list)) {
@@ -44,14 +48,31 @@ set_contrasts <- function(model_data, ...) {
 #'
 #' @return Cleaned up formulas as needed
 .reinstate_dropped_trends <- function(formulas) {
-  char_formulas <- vapply(formulas, deparse, "char")
-  has_dropped_trends <- vapply(char_formulas, function(x) grepl(" - [^ ]+:[^ ]+", x) & grepl("contr\\.poly", x), TRUE)
-  num_ignoring <- sum(has_dropped_trends)
+  char_formulas <- vapply(formulas, deparse1, "char")
+
+  uses_contrpoly <- vapply(char_formulas, function(x) grepl("contr\\.poly", x), TRUE)
+  has_dropped_trends <- vapply(char_formulas, function(x) grepl(" - [^ ]+:[^ ]+", x), TRUE)
+
+  which_to_ignore <- uses_contrpoly & has_dropped_trends
+  which_used_incorrectly <- (!uses_contrpoly) & has_dropped_trends
+
+  num_ignoring <- sum(which_to_ignore)
+
+  # The ignoring part actually happens at the contrast_code level, where the
+  # drop trends argument is simply not used if contr.poly is not detected
+  if (any(which_used_incorrectly)){
+    warning(paste("Ignoring dropped trends, `-` used in invalid context (use only with contr.poly):",
+          crayon::cyan(char_formulas[which_used_incorrectly]),
+          sep = "\n",
+          collapse = "\n"))
+  }
 
   if (num_ignoring == 0)
     return(formulas)
 
-  ignore_string <- paste(crayon::cyan(num_ignoring), ifelse(num_ignoring == 1, "formula", "formulas"))
+  ignore_string <- paste(crayon::cyan(num_ignoring),
+                         ifelse(num_ignoring == 1, "formula", "formulas")
+                         )
 
   if (any(has_dropped_trends)) {
     warning(glue::glue("Cannot drop trends with set_contrasts, ignoring in {ignore_string}. Use enlist_contrasts instead."))
@@ -61,7 +82,7 @@ set_contrasts <- function(model_data, ...) {
 
   for (i in formulas_dropped_indices) {
     var_envir <- rlang::get_env(formulas[[i]])
-    new_formula <- gsub(" - [^ ]+:[^ ]+","",deparse(formulas[[i]]))
+    new_formula <- gsub(" - [^ ]+:[^ ]+","",deparse1(formulas[[i]]))
     formulas[[i]] <- formula(new_formula, env = var_envir)
   }
 
