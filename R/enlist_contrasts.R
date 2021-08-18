@@ -74,13 +74,14 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
     lapply(formula_indices,
            function(x)
              .process_contrasts(model_data,
-                                char_formulas[[x]],
-                                var_envir = rlang::get_env(formulas[[x]]) # Reference value bindings
-                                )
-           ),
+                                char_formula = char_formulas[[x]],
+                                raw_formula = formulas[[x]] # Reference value bindings
+             )
+    ),
     names(vars_in_model)
   )
 }
+
 
 #' Convert non factors to factors
 #'
@@ -114,43 +115,103 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
 #' Helper to generate contrast matrix from passed formulas in enlist_contrasts
 #'
 #' @param model_data Data frame with factor column
+#' @param raw_formula Raw formula
 #' @param char_formula character conversion of formula
-#' @param var_envir Environment in which the reference variables can be found
 #'
 #' @return A contrast matrix
-.process_contrasts <- function(model_data, char_formula, var_envir) {
-  reference_specified <- grepl("\\+",char_formula[[3L]])
-  coding_scheme <- strsplit(char_formula[[3L]], " \\+|\\* ", perl = TRUE)[[1L]]
+.process_contrasts <- function(model_data, char_formula, raw_formula) {
+  var_envir <- rlang::get_env(raw_formula)
+  coding_scheme <- strsplit(char_formula[[3L]], " [+*-] ", perl = TRUE)[[1L]][[1L]]
+
   coding_scheme <- .scrub_scheme(coding_scheme)
-  arg_length <- length(coding_scheme)
-  reference_level <- NA
-  intercept_level <- NA
-
-  # If three arguments are specified, 2nd is ref level & 3rd is intercept level
-  # otherwise the second level depends on whether + or * was used
-  if (arg_length == 3) {
-    reference_level <- .get_if_exists(coding_scheme[[2L]], var_envir)
-    intercept_level <- .get_if_exists(coding_scheme[[3L]], var_envir)
-  } else if (arg_length == 2) {
-    if (reference_specified)
-      reference_level <- .get_if_exists(coding_scheme[[2L]], var_envir)
-    else
-      intercept_level <- .get_if_exists(coding_scheme[[2L]], var_envir)
-  }
-
-  # Additional handling if raw matrix is passed
-  if (grepl("matrix\\(",coding_scheme[[1L]])) {
+  # Including raw matrix calls in the formula requires special handling
+  has_matrix <- grepl("matrix\\(",coding_scheme[[1L]])
+  if (has_matrix){
     use_matrix <- eval(parse(text = coding_scheme[[1L]]))
-    coding_scheme[[1L]] <- 'use_matrix'
+    coding_scheme <- "use_matrix"
   }
 
+  params <- .parse_formula(raw_formula, has_matrix)
+
+  # get("columnname", model_data) works the same as model_data$columnname
   contrast_code(
-    factor_col = model_data[[char_formula[[2L]]]],
-    code_by = get(coding_scheme[[1L]]),
-    reference_level = reference_level,
-    set_intercept = intercept_level
+    factor_col = get(params[["factor_col"]], model_data),
+    code_by = get(coding_scheme), # May need to
+    reference_level = .get_if_exists(params[["reference_level"]], var_envir),
+    set_intercept = .get_if_exists(params[["intercept_level"]], var_envir),
+    drop_trends = .get_if_exists(params[["drop_trends"]], var_envir)
   )
 
+}
+
+#' Parse contrast formula
+#'
+#' Takes a formula and figures out the parameters to use based on the operands
+#' provided in the formula
+#'
+#' @param raw_formula Raw formula passed by user
+#' @param has_matrix Whether a matrix call is detected or not
+#'
+#' @return A list of parameters to use for a contrast_code call
+.parse_formula <- function(raw_formula, has_matrix = FALSE) {
+  no_matrix_string <- char_formula <-  deparse(raw_formula)
+
+  call_parameters <-
+    list("factor_col" = NA,
+         "reference_level" = NA,
+         "intercept_level" = NA,
+         "drop_trends" = NA)
+
+  if (has_matrix){
+    call_parameters["code_by"] <- "use_matrix"
+    no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",deparse(raw_formula))
+  }
+
+  .check_if_valid_formula(raw_formula, char_formula, no_matrix_string)
+
+  call_parameters[["factor_col"]] <- as.character(raw_formula[[2L]])
+
+  matches <- stringr::str_match_all(no_matrix_string, "([+*-])+ ([^ ]+)")[[1L]]
+  if (nrow(matches) == 0L)
+    return(call_parameters)
+
+  operations <- matrix(matches[,2:3],nrow = nrow(matches))
+  values <- operations[,2L]
+  names(values) <- operations[,1L]
+  op_mapping <- c("+" = "reference_level",
+                  "*" = "intercept_level",
+                  "-" = "drop_trends")
+
+  for (operand in names(values)) {
+    call_parameters[[op_mapping[[operand]]]] <- values[[operand]]
+  }
+
+  call_parameters
+}
+
+#' Formula validator
+#'
+#' Given a formula (and various preprocessed versions of it), run diagnostics
+#' to ensure that it's a valid formula.
+#'
+#' @param formula Raw formula
+#' @param char_formula Character string of the formula from deparse
+#' @param no_matrix_string String without any matrix calls
+#'
+#' @return Nothing, throws an error if any are found
+.check_if_valid_formula <- function(formula, char_formula, no_matrix_string) {
+  if (length(formula) == 1)
+    stop("Formula must be two sided.")
+  if (grepl("[*+-][^~]+~",no_matrix_string))
+    stop("Formula must have 1 variable name on left hand side.")
+  if (any(stringr::str_count(no_matrix_string, c("\\+", "\\*", "\\-")) > 1))
+    stop("You may only use +, *, and - once")
+  if (any(stringr::str_detect(no_matrix_string, c("%in%", "\\^"))))
+    stop("You cannot use the ^ or %in% operators in this formula")
+  if (grepl("[^-] [^ ]+:[^ ]+", no_matrix_string))
+    stop("Sequences of the form a:b may only be used to drop trends with the - operator")
+  if (grepl(" ~ [+-].+ ?", char_formula))
+    stop("First term in right hand side must be a contrast matrix or contrast function")
 }
 
 #' Remove whitespace
@@ -164,9 +225,58 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
   vapply(coding_scheme, function(x) gsub(" *", "", x), "char", USE.NAMES = FALSE)
 }
 
+#' Get value if it exists
+#'
+#' Given a name and an environment, lookup its value. If it isn't a variable name
+#' it will do some string preprocessing before returning the value. Later
+#' functions use mostly string representations anyways.
+#'
+#' @param scheme_argument Argument used in the scheme
+#' @param var_envir Environment to look up value
+#'
+#' @return Value of a variable, or the original string cleaned up
 .get_if_exists <- function(scheme_argument, var_envir) {
+  if (is.na(scheme_argument))
+    return(NA)
   if (exists(scheme_argument,where = var_envir))
     return(get(scheme_argument, envir = var_envir))
+  if (grepl("^.+:.+$", scheme_argument))
+    return(.parse_drop_sequence(scheme_argument, var_envir))
+
   gsub('"| ', '', scheme_argument)
+}
+
+#' Parse comparisons to drop
+#'
+#' This parses any sequences following a `-` operator and expands them to
+#' a numeric vector.
+#'
+#' @param scheme_argument A scheme argument of the form "a:b", where a and b
+#' can correspond to variable names bound in var_envir or numbers.
+#' @param var_envir Environment to look up values if a and b are variable names
+#'
+#' @return A sequence of numbers
+.parse_drop_sequence <- function(scheme_argument, var_envir) {
+  sequence_args <- stringr::str_match(scheme_argument,"(.+):(.+)")[,2L:3L]
+  # Strings like "3L" cannot be converted to numbers, L must be removed first
+  sequence_args <- vapply(sequence_args,
+                          function(x)
+                            ifelse(grepl("^\\d+L$", x),
+                                   gsub("L$","",x),
+                                   x),
+                          "char")
+  numeric_args <- suppressWarnings(vapply(sequence_args, as.numeric, NA_real_))
+  arg_is_non_numeric <- is.na(numeric_args)
+
+  sequence_ends <-
+    vapply(c(1L,2L),
+           function(i) {
+             ifelse(arg_is_non_numeric[[i]],
+                    get(sequence_args2[[i]], envir=var_envir),
+                    numeric_args[[i]])
+           },
+           1.0)
+
+  seq(sequence_ends[[1L]], sequence_ends[[2L]])
 }
 
