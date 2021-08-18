@@ -4,12 +4,15 @@
 \alias{set_contrasts}
 \title{Set contrasts to dataframe}
 \usage{
-set_contrasts(model_data, ...)
+set_contrasts(model_data, ..., verbose = TRUE)
 }
 \arguments{
 \item{model_data}{Data to be passed to the model, ensure factors are available}
 
 \item{...}{Series of formulas denoting which contrast scheme to use for each factor}
+
+\item{verbose}{Whether messages should be displayed, default TRUE, must be named
+if passed}
 }
 \value{
 the model_data dataframe, but with updated contrasts.
