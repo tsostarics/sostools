@@ -23,6 +23,9 @@ the first label in dimnames of the original contrasts}
 \item{set_intercept}{Label of the desired intercept level, will default to
 scheme's default (typically grand mean, unless using contr.treatment, which does
 the reference level)}
+
+\item{drop_trends}{Which trends to drop from the final matrix, should only
+be used with `contr.poly` to remove higher order trends}
 }
 \description{
 Set contrast coding with function

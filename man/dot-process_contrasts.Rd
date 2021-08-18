@@ -17,5 +17,6 @@
 A contrast matrix
 }
 \description{
-Helper to generate contrast matrix from passed formulas in enlist_contrasts
+Processes a formula and any arguments for the contrast matrix and sets up
+the contrast_code call
 }

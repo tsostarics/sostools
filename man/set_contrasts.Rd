@@ -19,3 +19,15 @@ Uses the same syntax as enlist_contrasts, but returns the dataframe with the
 new contrasts applied. Use this when your model function doesnt have a contrasts
 argument and you want to avoid writing contrasts<- multiple times.
 }
+\details{
+NOTE: Sometimes when using orthogonal polynomial contrasts from contr.poly,
+people will drop higher level polynomials for parsimony. Note however that
+these do capture some amount of variation, so even though they're orthogonal
+contrasts the lower level polynomials will have their estimates changed. Moreover,
+you cannot reduce a contrast matrix to a matrix smaller than size k*k-1 in
+the dataframe you pass to a model fitting function itself, as R will try
+to fill in the gaps with something else. I don't know what these correpond to,
+but it's unlikely to be anything meaningful. If you want to drop contrasts
+you'll need to use something like `enlist_contrasts(df, x ~ contr.poly - 3:5)`
+and pass this to the `contrasts` argument in the model fitting function.
+}

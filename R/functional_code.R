@@ -7,6 +7,8 @@
 #' @param set_intercept Label of the desired intercept level, will default to
 #' scheme's default (typically grand mean, unless using contr.treatment, which does
 #' the reference level)
+#' @param drop_trends Which trends to drop from the final matrix, should only
+#' be used with `contr.poly` to remove higher order trends
 #'
 #' @export
 #' @importFrom stats contr.helmert contr.poly contr.treatment
@@ -27,8 +29,8 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
   if (!is.na(set_intercept))
     return(.set_intercept(new_contrasts, set_intercept))
 
-  if (identical(coding_fx, contr.poly) & !is.na(drop_trends)) {
-    new_contrasts <- new_contrasts[-drop_trends]
+  if (identical(coding_fx, contr.poly) & !any(is.na(drop_trends))) {
+    new_contrasts <- new_contrasts[,-drop_trends]
   }
 
   return(new_contrasts)
