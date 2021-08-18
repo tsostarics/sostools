@@ -16,3 +16,14 @@ test_that("set contrast equivalent to manual contrast codes", {
   expect_true(all(columns_equivalent))
 
   })
+
+test_that("Ignoring dropped levels in orthogonal polynomial contrasts", {
+
+  expect_warning(aaa <- set_contrasts(mtcars, carb ~ contr.poly - 4:6),
+                 regexp = r"(Cannot drop trends .+ formula\.)")
+  expect_warning(aaa <- set_contrasts(mtcars, carb ~ contr.poly - 4:6, gear ~ contr.poly - 2:3),
+                 regexp = r"(Cannot drop trends .+ formulas\.)")
+  expect_equal(contrasts(aaa$carb), contr.poly(6), ignore_attr = TRUE)
+  expect_equal(contrasts(aaa$gear), contr.poly(3), ignore_attr = TRUE)
+
+})

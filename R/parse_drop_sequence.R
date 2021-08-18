@@ -25,7 +25,7 @@
     vapply(c(1L,2L),
            function(i) {
              ifelse(arg_is_non_numeric[[i]],
-                    get(sequence_args2[[i]], envir=var_envir),
+                    get(sequence_args[[i]], envir = var_envir),
                     numeric_args[[i]])
            },
            1.0)
