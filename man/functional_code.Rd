@@ -8,7 +8,8 @@ functional_code(
   factor_col,
   coding_fx,
   reference_level = NA,
-  set_intercept = NA
+  set_intercept = NA,
+  drop_trends = NA
 )
 }
 \arguments{

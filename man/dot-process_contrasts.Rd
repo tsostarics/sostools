@@ -4,14 +4,14 @@
 \alias{.process_contrasts}
 \title{Pass arguments to contrast code}
 \usage{
-.process_contrasts(model_data, char_formula, var_envir)
+.process_contrasts(model_data, char_formula, raw_formula)
 }
 \arguments{
 \item{model_data}{Data frame with factor column}
 
 \item{char_formula}{character conversion of formula}
 
-\item{var_envir}{Environment in which the reference variables can be found}
+\item{raw_formula}{Raw formula}
 }
 \value{
 A contrast matrix

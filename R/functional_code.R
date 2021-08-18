@@ -10,7 +10,7 @@
 #'
 #' @export
 #' @importFrom stats contr.helmert contr.poly contr.treatment
-functional_code <- function(factor_col, coding_fx, reference_level=NA, set_intercept = NA) {
+functional_code <- function(factor_col, coding_fx, reference_level=NA, set_intercept = NA, drop_trends = NA) {
   labels <- .get_dimnames(factor_col)
   reference_i <- .get_reference_index(labels, reference_level, coding_fx)
 
@@ -26,6 +26,10 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
 
   if (!is.na(set_intercept))
     return(.set_intercept(new_contrasts, set_intercept))
+
+  if (identical(coding_fx, contr.poly) & !is.na(drop_trends)) {
+    new_contrasts <- new_contrasts[-drop_trends]
+  }
 
   return(new_contrasts)
 }
