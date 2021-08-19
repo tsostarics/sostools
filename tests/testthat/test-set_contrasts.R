@@ -31,3 +31,12 @@ test_that("Ignoring dropped levels in orthogonal polynomial contrasts", {
   expect_equal(contrasts(aaa$gear), contr.poly(3), ignore_attr = TRUE)
 
 })
+# mutate(aaa, across(.cols = carb,
+#                    .fns = \(x) {
+#                      newcols <- model.matrix(~carb)[,2:3]
+#                      colnames(newcols) <- gsub("^carb\\.","",colnames(newcols))
+#                      return(newcols)
+#                      },
+#                    .names = list("linear","quadratic")
+#                    )
+#        )
