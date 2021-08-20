@@ -94,22 +94,17 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
 #' @return A contrast matrix
 .process_contrasts <- function(model_data, char_formula, raw_formula) {
   var_envir <- rlang::get_env(raw_formula)
-  coding_scheme <- strsplit(char_formula[[3L]], " [+*-] ", perl = TRUE)[[1L]][[1L]]
-  coding_scheme <- .scrub_scheme(coding_scheme)
 
-  # Including raw matrix calls in the formula requires special handling
-  has_matrix <- grepl("matrix\\(",coding_scheme[[1L]])
-  if (has_matrix){
-    use_matrix <- eval(parse(text = coding_scheme[[1L]]))
-    coding_scheme <- "use_matrix"
+  params <- .parse_formula(raw_formula)
+
+  if (params[["code_by"]] == "use_matrix"){
+    use_matrix <- attr(params[["code_by"]], "mat")
   }
-
-  params <- .parse_formula(raw_formula, has_matrix)
 
   # get("columnname", model_data) works the same as model_data$columnname
   contrast_code(
     factor_col = get(params[["factor_col"]], model_data),
-    code_by = get(coding_scheme),
+    code_by = get(params[["code_by"]]),
     reference_level = .get_if_exists(params[["reference_level"]], var_envir),
     set_intercept = .get_if_exists(params[["intercept_level"]], var_envir),
     drop_trends = .get_if_exists(params[["drop_trends"]], var_envir)

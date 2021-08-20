@@ -45,30 +45,38 @@ test_that("Formula parsing with matrix call works", {
                             -0.25/4, -0.25*2, 0.75^2.3,
                             -0.25, -0.25, -0.25%in%c(1,2,3),
                             -0.25, 0.75, -0.25) %>% abs(), nrow = 4) + 4 * 2 -3:5
-  params <- .parse_formula(f_mat1, TRUE)
+  params <- .parse_formula(f_mat1)
+  ref_mat <-
+    matrix(c(0.75, 0.5, 0, 0.25,
+           0.516, 0.25, 0.25, 0.25,
+           0.75, 0.0625, 0.25, 0.25), nrow = 4, byrow = TRUE)
 
   reference <-
     list("factor_col" = "gear",
+         "code_by" = "use_matrix",
          "reference_level" = "4",
          "intercept_level" = "2",
          "drop_trends" = "3:5")
 
-  expect_equal(params, reference)
+  expect_equal(params, reference, ignore_attr = TRUE)
+  expect_equal(round(attr(params$code_by, "mat"), 4), ref_mat)
 })
 
 test_that("Formula parsing with functions works", {
   f_allops <- gear ~ contr.poly + "a" * "b" -a:b
-  params_allops <- .parse_formula(f_allops, FALSE)
+  params_allops <- .parse_formula(f_allops)
   reference_allops <-
     list("factor_col" = "gear",
+         "code_by" = "contr.poly",
          "reference_level" = '"a"',
          "intercept_level" = '"b"',
          "drop_trends" = "a:b")
 
   f_noops <- gear ~ contr.poly
-  params_noops <- .parse_formula(f_noops, FALSE)
+  params_noops <- .parse_formula(f_noops)
   reference_noops <-
     list("factor_col" = "gear",
+         "code_by" = "contr.poly",
          "reference_level" = NA,
          "intercept_level" = NA,
          "drop_trends" = NA)

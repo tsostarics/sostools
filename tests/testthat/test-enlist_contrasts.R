@@ -98,3 +98,7 @@ test_that("Environment handling when piping with magrittr works", {
   expect_equal(contrasts(native_df$gear), magrittr_contrasts[[1L]])
 })
 
+test_that("Error handling when an invalid matrix is passed", {
+  expect_error(enlist_contrasts(mtcars, gear ~ matrix(c(1, 1, 1, 2, 2, 2), nrow = 3), verbose = FALSE),
+               regexp = ("Lapack .+your matrix"))
+})

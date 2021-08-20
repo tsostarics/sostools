@@ -4,20 +4,31 @@
 #' provided in the formula
 #'
 #' @param raw_formula Raw formula passed by user
-#' @param has_matrix Whether a matrix call is detected or not
 #'
 #' @return A list of parameters to use for a contrast_code call
-.parse_formula <- function(raw_formula, has_matrix = FALSE) {
-  no_matrix_string <- char_formula <-  deparse1(raw_formula)
-
+.parse_formula <- function(raw_formula) {
   call_parameters <-
     list("factor_col" = NA,
+         "code_by" = NA,
          "reference_level" = NA,
          "intercept_level" = NA,
          "drop_trends" = NA)
 
-  if (has_matrix) {
-    no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",deparse1(raw_formula))
+  char_formula <-  deparse1(raw_formula)
+
+  coding_scheme <- stringr::str_extract(as.character(raw_formula)[[3L]],
+                                        r"((matrix\((.+\(.+\)?)(, .+)*\))|(^[^ ]+))")
+  coding_scheme <- .scrub_scheme(coding_scheme)
+  call_parameters[["code_by"]] <- coding_scheme
+
+  # Including raw matrix calls in the formula requires special handling
+  no_matrix_string <- char_formula
+  has_matrix <- grepl("matrix\\(",char_formula)
+  if (has_matrix){
+    use_matrix <- .eval_matrixcall(coding_scheme)
+    call_parameters[["code_by"]] <- "use_matrix"
+    attr(call_parameters[["code_by"]], "mat") <- use_matrix
+    no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",char_formula)
   }
 
   .check_if_valid_formula(raw_formula, char_formula, no_matrix_string)
@@ -41,6 +52,13 @@
 
   call_parameters
 }
+
+.eval_matrixcall <- function(matrix_string) {
+  contr_mat <- eval(parse(text = matrix_string))
+  .check_if_valid_contrmat(contr_mat)
+  contr_mat
+}
+
 
 #' Formula validator
 #'
@@ -67,3 +85,6 @@
     stop("First term in right hand side must be a contrast matrix or contrast function")
   return(invisible(TRUE))
 }
+
+
+

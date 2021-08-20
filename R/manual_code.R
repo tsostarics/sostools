@@ -35,6 +35,8 @@ manual_code <- function(factor_col, coding_matrix = NA) {
 }
 
 .reset_comparison_labels <- function(contr_mat) {
+  # Avoid running through comparison label setting if this isn't a valid contrast
+  .check_if_valid_contrmat(contr_mat)
   n_levels <- nrow(contr_mat)
   if (.check_polynomial(contr_mat))
     colnames(contr_mat) <- colnames(contr.poly(n_levels))

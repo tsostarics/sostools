@@ -4,12 +4,10 @@
 \alias{.parse_formula}
 \title{Parse contrast formula}
 \usage{
-.parse_formula(raw_formula, has_matrix = FALSE)
+.parse_formula(raw_formula)
 }
 \arguments{
 \item{raw_formula}{Raw formula passed by user}
-
-\item{has_matrix}{Whether a matrix call is detected or not}
 }
 \value{
 A list of parameters to use for a contrast_code call
