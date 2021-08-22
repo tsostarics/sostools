@@ -24,12 +24,12 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
                                            reference_i)
 
   dimnames(new_contrasts) <- labels
-  new_contrasts <- .reset_comparison_labels(new_contrasts)
+  new_contrasts <- .reset_comparison_labels(new_contrasts, coding_fx)
 
   if (!is.na(set_intercept))
     return(.set_intercept(new_contrasts, set_intercept))
 
-  if (identical(coding_fx, contr.poly) & !any(is.na(drop_trends))) {
+  if (.is_polynomial_scheme(coding_fx) & !any(is.na(drop_trends))) {
     new_contrasts <- new_contrasts[,-drop_trends]
   }
 
@@ -89,7 +89,9 @@ functional_code <- function(factor_col, coding_fx, reference_level=NA, set_inter
              forward_difference_code,
              helmert_code,
              reverse_helmert_code,
-             contr.poly),
+             contr.poly,
+             orth_polynomial_code,
+             raw_polynomial_code),
            function(x)
              identical(coding_fx, x),
            TRUE)

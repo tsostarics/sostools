@@ -34,11 +34,12 @@ manual_code <- function(factor_col, coding_matrix = NA) {
   .reset_comparison_labels(new_contrasts)
 }
 
-.reset_comparison_labels <- function(contr_mat) {
+.reset_comparison_labels <- function(contr_mat, coding_fx = NULL) {
   # Avoid running through comparison label setting if this isn't a valid contrast
   .check_if_valid_contrmat(contr_mat)
   n_levels <- nrow(contr_mat)
-  if (.check_polynomial(contr_mat))
+
+  if (!missing(coding_fx) && .is_polynomial_scheme(coding_fx))
     colnames(contr_mat) <- colnames(contr.poly(n_levels))
   else if (n_levels != 2 & .check_backward_difference(contr_mat))
       colnames(contr_mat) <- paste(rownames(contr_mat)[-1], rownames(contr_mat)[-n_levels], sep = "-")
@@ -54,11 +55,6 @@ manual_code <- function(factor_col, coding_matrix = NA) {
       colnames(contr_mat) <- new_colnames
   }
   contr_mat
-}
-
-.check_polynomial <- function(contr_mat) {
-  check_val <- round(contr.poly(nrow(contr_mat))[1], 3)
-  check_val %in% round(contr_mat, 3)
 }
 
 .check_forward_difference <- function(contr_mat) {
