@@ -97,50 +97,13 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
 
   params <- .parse_formula(raw_formula)
 
-  if (params[["code_by"]] == "use_matrix"){
-    use_matrix <- attr(params[["code_by"]], "mat")
-  }
-
   # get("columnname", model_data) works the same as model_data$columnname
   contrast_code(
     factor_col = get(params[["factor_col"]], model_data),
-    code_by = get(params[["code_by"]]),
-    reference_level = .get_if_exists(params[["reference_level"]], var_envir),
-    set_intercept = .get_if_exists(params[["intercept_level"]], var_envir),
-    drop_trends = .get_if_exists(params[["drop_trends"]], var_envir)
+    code_by = eval(params[["code_by"]], var_envir),
+    reference_level = eval(params[["reference_level"]], var_envir),
+    set_intercept = eval(params[["intercept_level"]], var_envir),
+    drop_trends = eval(params[["drop_trends"]], var_envir)
   )
 
 }
-
-#' Remove whitespace
-#'
-#' small helper to trim whitespace
-#'
-#' @param coding_scheme coding scheme in enlist_contrasts
-#'
-#' @return new coding scheme char vector trimmed whitespace
-.scrub_scheme <- function(coding_scheme) {
-  vapply(coding_scheme, function(x) gsub(" *", "", x), "char", USE.NAMES = FALSE)
-}
-
-#' Get value if it exists
-#'
-#' Given a name and an environment, lookup its value. If it isn't a variable name
-#' it will do some string preprocessing before returning the value. Later
-#' functions use mostly string representations anyways.
-#'
-#' @param scheme_argument Argument used in the scheme
-#' @param var_envir Environment to look up value
-#'
-#' @return Value of a variable, or the original string cleaned up
-.get_if_exists <- function(scheme_argument, var_envir) {
-  if (is.na(scheme_argument))
-    return(NA)
-  if (exists(scheme_argument,where = var_envir))
-    return(get(scheme_argument, envir = var_envir))
-  if (grepl("^.+:.+$", scheme_argument))
-    return(.parse_drop_sequence(scheme_argument, var_envir))
-
-  gsub('"| ', '', scheme_argument)
-}
-
