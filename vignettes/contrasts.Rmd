@@ -141,9 +141,12 @@ change the ordering manually before applying contrasts coding.
 - `helmert_code`: compare each level k to the mean of all levels above it (eg >1, >2)
 - `reverse_helmert_code`: compare each level k to the mean of all levels below if (eg <2, <3)
 
-Polynomial contrasts with `contr.poly` is used for trends, not group comparisons,
-so the usage is a bit different. The comparison labels will still work as
-expected though.
+Orthogonal polynomial contrasts with `contr.poly` are typically used to identify
+trends in ordinal predictors. In fact, just as `contr.treatment` is the default
+contrast setting for unordered factors in R, `contr.poly` is the default for
+ordered factors. Nonetheless, orthogonal polynomial contrasts aren't used
+for group comparisons, so the "comparison" labels are different. But this isn't
+an issue, and will still work as expected.
 
 ```{r}
 contrast_code(mdl_data$carb, contr.poly)
@@ -289,11 +292,12 @@ tests a distance from the grand mean. We use the term *sum coding*
 tests the difference $\mu_B - \mu_A$. Each comparison tests a distance from
 the reference level. We use the term *scaled sum coding*.
 
-It's worth noting that the term "sum coding" is not consistent across disciplines.
-Other terms that are used are simple coding, deviation coding, and contrast coding.
-I recommend that you choose a term from your discipline and stick to it,
-but also provide the exact contrast or hypothesis matrices in an appendix,
-preregistration, or supplementary material.
+It's worth noting that the terms "sum coding" and "scaled sum coding" are
+***not*** consistent across disciplines. Other terms that are used are simple
+coding, deviation coding, sum to zero coding, and contrast coding. I recommend
+that you choose a term from your discipline and stick to it, but also provide
+the exact contrast or hypothesis matrices in an appendix, preregistration, or
+supplementary material. 
 
 ## Changing Underlying Intercept
 
