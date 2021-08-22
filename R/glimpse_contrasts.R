@@ -92,7 +92,6 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE,verbose=FALSE
 
   for(i in seq_along(reference_levels)) {
     if (is.na(reference_levels[i])){
-      contr_mat <- eval(params[[i]][["code_by"]], rlang::get_env(formulas[[i]]))
       intuition <- .intuit_reference_level(contrast_list[[i]],
                                            rownames(contrast_list[[i]]))
       if (!is.na(intuition))
