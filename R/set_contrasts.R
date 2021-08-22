@@ -47,10 +47,14 @@ set_contrasts <- function(model_data, ..., verbose = TRUE) {
 #' @param formulas formulas passed to `set_contrasts`
 #'
 #' @return Cleaned up formulas as needed
+#'
+#' @importFrom stats formula contrasts<-
 .reinstate_dropped_trends <- function(formulas) {
   char_formulas <- vapply(formulas, deparse1, "char")
 
-  uses_contrpoly <- vapply(char_formulas, function(x) grepl("contr\\.poly", x), TRUE)
+  poly_schemes <- "contr\\.poly|orth_polynomial_code|raw_polynomial_code"
+
+  uses_contrpoly <- vapply(char_formulas, function(x) grepl(poly_schemes, x), TRUE)
   has_dropped_trends <- vapply(char_formulas, function(x) grepl(" - [^ ]+:[^ ]+", x), TRUE)
 
   which_to_ignore <- uses_contrpoly & has_dropped_trends
@@ -58,10 +62,13 @@ set_contrasts <- function(model_data, ..., verbose = TRUE) {
 
   num_ignoring <- sum(which_to_ignore)
 
-  # The ignoring part actually happens at the contrast_code level, where the
-  # drop trends argument is simply not used if contr.poly is not detected
+  # The ignoring part actually happens at the contrast_code level, where
+  # drop trends is simply not used if polynomial contrasts are not detected
   if (any(which_used_incorrectly)){
-    warning(paste("Ignoring dropped trends, `-` used in invalid context (use only with contr.poly):",
+    # Note: there's no check to see if a passed matrix is actually equivalent
+    # to polynomial contrasts. I'm not sure why someone would do that, but
+    # something to note for the future.
+    warning(paste("Ignoring dropped trends, `-` used in invalid context (use only with polynomial contrast functions):",
           crayon::cyan(char_formulas[which_used_incorrectly]),
           sep = "\n",
           collapse = "\n"))
