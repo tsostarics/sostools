@@ -35,7 +35,7 @@ test_that("Formula validation with matrix calls works", {
                             -0.25/4, -0.25*2, 0.75^2.3,
                             -0.25, -0.25, -0.25%in%c(1,2,3),
                             -0.25, 0.75, -0.25) %>% abs(), nrow = 4) + 4
-  char_formula <- deparse(f_mat1, width.cutoff = 500L)
+  char_formula <- deparse1(f_mat1)
   no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",char_formula)
   expect_true(.check_if_valid_formula(f_mat1, char_formula, no_matrix_string))
 })
@@ -46,37 +46,37 @@ test_that("Formula parsing with matrix call works", {
                             -0.25, -0.25, -0.25%in%c(1,2,3),
                             -0.25, 0.75, -0.25) %>% abs(), nrow = 4) + 4 * 2 -3:5
   params <- .parse_formula(f_mat1)
+  params[['code_by']] <- round(eval(params[['code_by']]), 4)
   ref_mat <-
     matrix(c(0.75, 0.5, 0, 0.25,
            0.516, 0.25, 0.25, 0.25,
            0.75, 0.0625, 0.25, 0.25), nrow = 4, byrow = TRUE)
 
   reference <-
-    list("factor_col" = "gear",
-         "code_by" = "use_matrix",
-         "reference_level" = "4",
-         "intercept_level" = "2",
-         "drop_trends" = "3:5")
+    list("factor_col" = sym("gear"),
+         "code_by" = ref_mat,
+         "reference_level" = 4,
+         "intercept_level" = 2,
+         "drop_trends" = str2lang("3:5"))
 
   expect_equal(params, reference, ignore_attr = TRUE)
-  expect_equal(round(attr(params$code_by, "mat"), 4), ref_mat)
 })
 
 test_that("Formula parsing with functions works", {
   f_allops <- gear ~ contr.poly + "a" * "b" -a:b
   params_allops <- .parse_formula(f_allops)
   reference_allops <-
-    list("factor_col" = "gear",
-         "code_by" = "contr.poly",
-         "reference_level" = '"a"',
-         "intercept_level" = '"b"',
-         "drop_trends" = "a:b")
+    list("factor_col" = sym("gear"),
+         "code_by" = sym("contr.poly"),
+         "reference_level" = "a",
+         "intercept_level" = "b",
+         "drop_trends" = str2lang("a:b"))
 
   f_noops <- gear ~ contr.poly
   params_noops <- .parse_formula(f_noops)
   reference_noops <-
-    list("factor_col" = "gear",
-         "code_by" = "contr.poly",
+    list("factor_col" = sym("gear"),
+         "code_by" = sym("contr.poly"),
          "reference_level" = NA,
          "intercept_level" = NA,
          "drop_trends" = NA)
@@ -84,3 +84,4 @@ test_that("Formula parsing with functions works", {
   expect_equal(params_allops, reference_allops)
   expect_equal(params_noops, reference_noops)
   })
+

@@ -102,3 +102,13 @@ test_that("Error handling when an invalid matrix is passed", {
   expect_error(enlist_contrasts(mtcars, gear ~ matrix(c(1, 1, 1, 2, 2, 2), nrow = 3), verbose = FALSE),
                regexp = ("Lapack .+your matrix"))
 })
+
+test_that("Passing matrix in variable name works", {
+  tstvar <- contr.poly(6)
+  reference <- enlist_contrasts(mtcars, carb ~ tstvar, verbose = FALSE)
+  rownames(tstvar) <- c(1,2,3,4,6,8)
+
+  expect_equal(list("carb" = tstvar), reference)
+
+})
+
