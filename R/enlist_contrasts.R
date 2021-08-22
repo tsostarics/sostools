@@ -63,7 +63,8 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
 
   model_data <- .convert_to_factors(model_data, names(vars_in_model), verbose)
 
-  .msg_if_remaining_factors(model_data, names(vars_in_model))
+  if (verbose)
+    .msg_if_remaining_factors(model_data, names(vars_in_model))
 
   if (!all(vars_in_model))
     stop(glue::glue("{names(vars_in_model)[!vars_in_model]} not found in model data\n",
