@@ -6,11 +6,6 @@
 #' list. The glimpse dataframe is the first element. FALSE will return just
 #' the glimpse data frame.
 #'
-#' Todo: Include an all.factors argument that will get the contrasts from
-#' anything not explicitly set in the function call. May need to be a separate
-#' helper whose output is rbinded to avoid dealing with different lengths. maybe
-#' use make parameters on the contrast arguments?
-#'
 #' @param model_data Data to be passed to a model fitting function
 #' @param ... Series of formulas
 #' @param return.list Logical, defaults to FALSE, whether the output of enlist_contrasts should be
@@ -50,15 +45,30 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALS
 
 
 
+  if (all.factors)
+    glimpse <- rbind(glimpse, .glimpse_default_factors(model_data, factor_names))
+
+  # The default factors don't need to be specified in the contrast list,
+  # they'll just use their respective defaults by the model fitting function
   if (return.list)
     return(list("glimpse" = glimpse, "contrasts" = contrast_list))
 
-  if (all.factors)
-    glimpse <- rbind(glimpse, .default_factors(model_data, factor_names))
   glimpse
 }
 
-.default_factors <- function(model_data, set_factors) {
+#' Glimpse default factors
+#'
+#' Given a dataframe with some factor columns and a character vector of
+#' which columns you've already set yourself, look at all the other
+#' factor columns and get a glimpse at how they're treated by the defaults
+#' specified in `options('contrasts')`
+#'
+#' @param model_data Dataframe
+#' @param set_factors Explicitly set columns to ignore
+#'
+#' @return A table with information about the contrasts for all remaining factor
+#' columns
+.glimpse_default_factors <- function(model_data, set_factors) {
   factor_cols <- names(dplyr::select(model_data, where(is.factor)))
   new_factors <- factor_cols[!factor_cols %in% set_factors]
   ordered_factors <- names(dplyr::select(model_data, where(is.ordered)))
