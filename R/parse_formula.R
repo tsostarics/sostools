@@ -1,64 +1,19 @@
 #' Parse contrast formula
 #'
-#' Takes a formula and figures out the parameters to use based on the operands
-#' provided in the formula
+#' Takes a formula and extracts the parameters for `contrast_code` if it is
+#' a valid formula. Validity checked via regexes, parameters extracted via
+#' recursively parsing the abstract syntax tree.
 #'
 #' @param raw_formula Raw formula passed by user
 #'
 #' @return A list of parameters to use for a contrast_code call
 .parse_formula <- function(raw_formula) {
-  call_parameters <-
-    list("factor_col" = NA,
-         "code_by" = NA,
-         "reference_level" = NA,
-         "intercept_level" = NA,
-         "drop_trends" = NA)
-
   char_formula <-  deparse1(raw_formula)
-
-  coding_scheme <- stringr::str_extract(as.character(raw_formula)[[3L]],
-                                        r"((matrix\((.+\(.+\)?)(, .+)*\))|(^[^ ]+))")
-  coding_scheme <- .scrub_scheme(coding_scheme)
-  call_parameters[["code_by"]] <- coding_scheme
-
-  # Including raw matrix calls in the formula requires special handling
-  no_matrix_string <- char_formula
-  has_matrix <- grepl("matrix\\(",char_formula)
-  if (has_matrix){
-    use_matrix <- .eval_matrixcall(coding_scheme)
-    call_parameters[["code_by"]] <- "use_matrix"
-    attr(call_parameters[["code_by"]], "mat") <- use_matrix
-    no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",char_formula)
-  }
-
+  no_matrix_string <- gsub(r"(matrix\((.+\(.+\)?)(, .+)*\) ?)","",char_formula)
   .check_if_valid_formula(raw_formula, char_formula, no_matrix_string)
 
-  call_parameters[["factor_col"]] <- as.character(raw_formula[[2L]])
-
-  matches <- stringr::str_match_all(no_matrix_string, "([+*-])+ ([^ ]+)")[[1L]]
-  if (nrow(matches) == 0L)
-    return(call_parameters)
-
-  operations <- matrix(matches[,2:3],nrow = nrow(matches))
-  values <- operations[,2L]
-  names(values) <- operations[,1L]
-  op_mapping <- c("+" = "reference_level",
-                  "*" = "intercept_level",
-                  "-" = "drop_trends")
-
-  for (operand in names(values)) {
-    call_parameters[[op_mapping[[operand]]]] <- values[[operand]]
-  }
-
-  call_parameters
+  .make_parameters(raw_formula)
 }
-
-.eval_matrixcall <- function(matrix_string) {
-  contr_mat <- eval(parse(text = matrix_string))
-  .check_if_valid_contrmat(contr_mat)
-  contr_mat
-}
-
 
 #' Formula validator
 #'
@@ -85,6 +40,3 @@
     stop("First term in right hand side must be a contrast matrix or contrast function")
   return(invisible(TRUE))
 }
-
-
-
