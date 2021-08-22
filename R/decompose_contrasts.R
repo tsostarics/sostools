@@ -13,6 +13,8 @@
 #'
 #' @return model_data but with new columns corresponding to the numeric coding
 #' of the given factor's contrasts
+#'
+#' @importFrom stats model.matrix
 decompose_contrasts <- function(model_data, factor_col, extract.seq = NULL, extract.to = NULL) {
   # insert tidy eval for factor col here for unquoted column later
   # insert vectorized support for multiple columns later
