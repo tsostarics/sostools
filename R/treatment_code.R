@@ -1,16 +1,15 @@
-#' Sum code
+#' Treatment code
 #'
 #' Wrapper around R's built in function
 #'
 #' For n levels of factors, generate a matrix with n-1 comparisons where:
-#' Reference level = -1
+#' Reference level = 0
 #' Comparison level = 1
-#' All others = 0
 #'
 #' @param n_levels number of levels for this factor
 #'
-#' @return A matrix of sum coded contrasts, unlabeled
+#' @return A matrix of treatment coded contrasts, unlabeled
 #' @export
-sum_code <- function(n_levels) {
-  contr.sum(n_levels)
+treatment_code <- function(n_levels) {
+  contr.treatment(n_levels)
 }
