@@ -20,9 +20,9 @@
 #' @return A dataframe is return.list is FALSE, a list with a dataframe and list
 #' of named contrasts if TRUE.
 #' @export
-glimpse_contrasts <- function(model_data, ..., return.list = FALSE,verbose=FALSE) {
+glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALSE, all.factors=TRUE) {
   formulas <- suppressWarnings(rlang::dots_splice(...)) # outer names warning?
-  contrast_list <- enlist_contrasts(model_data, ..., verbose=verbose)
+  contrast_list <- enlist_contrasts(model_data, ..., 'verbose' = verbose)
   params <- lapply(formulas, .make_parameters)
 
   # Extract various information
@@ -40,19 +40,61 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE,verbose=FALSE
   dropped_trends[!which_are_polynomials] <- NA
 
   glimpse <- tibble::tibble("factor" = factor_names,
-                        "n_levels" = factor_sizes,
-                        "level_names" = level_names,
-                        "scheme" = scheme_labels,
-                        "reference_level" = reference_levels,
-                        "intercept" = intercept_interpretations,
-                        "orthogonal" = orthogonal_contrasts,
-                        "dropped_trends" = dropped_trends)
+                            "n_levels" = factor_sizes,
+                            "level_names" = level_names,
+                            "scheme" = scheme_labels,
+                            "reference_level" = reference_levels,
+                            "intercept" = intercept_interpretations,
+                            "orthogonal" = orthogonal_contrasts,
+                            "dropped_trends" = dropped_trends)
 
 
 
   if (return.list)
     return(list("glimpse" = glimpse, "contrasts" = contrast_list))
 
+  if (all.factors)
+    glimpse <- rbind(glimpse, .default_factors(model_data, factor_names))
+  glimpse
+}
+
+.default_factors <- function(model_data, set_factors) {
+  factor_cols <- names(dplyr::select(model_data, where(is.factor)))
+  new_factors <- factor_cols[!factor_cols %in% set_factors]
+  ordered_factors <- names(dplyr::select(model_data, where(is.ordered)))
+  is_ordered_factor <- new_factors %in% ordered_factors
+  names(is_ordered_factor) <- new_factors
+  new_contrasts <- lapply(new_factors,
+                          function(x) contrasts(model_data[[x]]))
+
+
+  factor_sizes <- vapply(new_factors,
+                         function(x) nlevels(model_data[[x]]),
+                         FUN.VALUE = 1L)
+  level_names <- lapply(new_factors, function(x) levels(model_data[[x]]))
+  scheme_labels <- vapply(new_factors,
+                          function(x)
+                            ifelse(is_ordered_factor[x],
+                                   options('contrasts')[[1]]["ordered"],
+                                   options('contrasts')[[1]]["unordered"]),
+                          FUN.VALUE = "char")
+  reference_levels <- vapply(new_factors,
+                             function(x)
+                             ifelse(is_ordered_factor[x],
+                                    NA_character_,
+                                    as.character(levels(model_data[[x]])[[1L]])),
+                             "char")
+  intercept_interpretations <- vapply(new_contrasts, interpret_intercept, "char", USE.NAMES = FALSE)
+  orthogonal_contrasts <- vapply(new_contrasts, is_orthogonal, TRUE)
+  dropped_trends <- rep(NA, length(new_factors))
+  glimpse <- tibble::tibble("factor" = new_factors,
+                            "n_levels" = factor_sizes,
+                            "level_names" = level_names,
+                            "scheme" = scheme_labels,
+                            "reference_level" = reference_levels,
+                            "intercept" = intercept_interpretations,
+                            "orthogonal" = orthogonal_contrasts,
+                            "dropped_trends" = dropped_trends)
   glimpse
 }
 
@@ -129,10 +171,11 @@ interpret_intercept <- function(contr_mat) {
 
   # Check if 1 level (eg contr.treatment)
   contributing_levels <- intercept_column != 0
-  if (sum(contributing_levels) == 1){
-    mean_levels <- paste(level_names[contributing_levels], collapse = ", ")
+  if (sum(contributing_levels) > 0){
+    mean_levels <- paste(level_names[contributing_levels], collapse = ",")
     return(glue::glue("mean({mean_levels})"))
   }
 
+  # Add something more here later
   return("custom weights")
 }
