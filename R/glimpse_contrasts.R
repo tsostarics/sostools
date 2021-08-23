@@ -15,7 +15,7 @@
 #' @return A dataframe is return.list is FALSE, a list with a dataframe and list
 #' of named contrasts if TRUE.
 #' @export
-glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALSE, all.factors=TRUE) {
+glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE, all.factors=TRUE) {
   formulas <- suppressWarnings(rlang::dots_splice(...)) # outer names warning?
   contrast_list <- enlist_contrasts(model_data, ..., 'verbose' = verbose)
   params <- lapply(formulas, .make_parameters)
