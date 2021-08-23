@@ -40,7 +40,8 @@ raw_polynomial_code <- function(n_levels) {
 
 .is_polynomial_scheme <- function(scheme) {
   # maybe include a check on the numbers to handle raw passed matrices
-  checks <- list(contr.poly, orth_polynomial_code, raw_polynomial_code)
+  checks <- list(contr.poly, orth_polynomial_code, raw_polynomial_code,
+                 'contr.poly', 'orth_polynomial_code', 'raw_polynomial_code')
 
   any(vapply(checks, function(x) identical(x, scheme), FUN.VALUE = TRUE))
 }

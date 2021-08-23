@@ -55,7 +55,7 @@
 enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
   # Get the formulas from the dots into list and character formats to work with
   formulas <- suppressWarnings(rlang::dots_splice(...)) # outer names warning?
-  char_formulas <- lapply(formulas, as.character)
+  char_formulas <- .formula_to_char(formulas) # as.character with a better error msg
 
   # Extract which factor columns are attempting to be set
   vars_in_model <- vapply(char_formulas, function(x) x[[2L]] %in% names(model_data), TRUE)
@@ -63,7 +63,8 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
 
   model_data <- .convert_to_factors(model_data, names(vars_in_model), verbose)
 
-  .msg_if_remaining_factors(model_data, names(vars_in_model))
+  if (verbose)
+    .msg_if_remaining_factors(model_data, names(vars_in_model))
 
   if (!all(vars_in_model))
     stop(glue::glue("{names(vars_in_model)[!vars_in_model]} not found in model data\n",
@@ -81,6 +82,7 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
     names(vars_in_model)
   )
 }
+
 
 #' Pass arguments to contrast code
 #'
