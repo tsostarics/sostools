@@ -31,3 +31,31 @@ test_that("Glimpse works", {
   expect_equal(tst$dropped_trends, c("3,4,5",NA,NA))
   expect_equal(tst$explicitly_set, c(TRUE,TRUE,FALSE))
 })
+
+test_that("Glimpse with variables works", {
+  tstdf <- mtcars
+  a <- 3
+  b <- 4
+  c <- 5
+  mat <- scaled_sum_code(3)
+  tst <- glimpse_contrasts(tstdf,
+                           carb ~ contr.poly - a:c,
+                           gear ~ mat + c * b,
+                           cyl ~ scaled_sum_code + b * b,
+                           verbose = FALSE)
+  expect_equal(tst$scheme, c('contr.poly','custom','scaled_sum_code'))
+  expect_equal(tst$intercept, c('grand mean', 'grand mean', 'mean(4)'), ignore_attr = TRUE)
+  expect_equal(tst$dropped_trends, c('3,4,5',NA,NA))
+})
+
+test_that("Clean scheme labels works", {
+  expect_equal(.clean_schemes(c("contr.poly", "contr.sum", "scaled_sum_code")),
+               c("orth_polynomial", "sum", "scaled_sum"))
+})
+
+test_that("Warning with non default contrasts works", {
+  tstdf <- dplyr::mutate(mtcars, gear = factor(gear), cyl = factor(cyl), carb = ordered(carb))
+  tstdf <- set_contrasts(tstdf, cyl ~ contr.sum, carb ~ raw_polynomial_code, verbose = FALSE)
+
+  expect_warning(.glimpse_default_factors(tstdf), regexp="Glimpse table may be unreliable")
+})
