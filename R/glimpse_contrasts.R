@@ -11,11 +11,21 @@
 #' @param return.list Logical, defaults to FALSE, whether the output of enlist_contrasts should be
 #' returned
 #' @param verbose Logical, defaults to FALSE, whether messages should be printed
+#' @param all.factors Logical, defaults to TRUE, whether the factors not
+#' explicitly set with formulas should be included
+#' @param clean.schemes Logical, defaults to FALSE, whether the contrast schemes
+#' should remove "contr." and "_code" from the names ("sum" and not "contr.sum"
+#' or "sum_code")
 #'
 #' @return A dataframe is return.list is FALSE, a list with a dataframe and list
 #' of named contrasts if TRUE.
 #' @export
-glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE, all.factors=TRUE) {
+glimpse_contrasts <- function(model_data,
+                              ...,
+                              return.list = FALSE,
+                              verbose=TRUE,
+                              all.factors=TRUE,
+                              clean.schemes = FALSE) {
   formulas <- suppressWarnings(rlang::dots_splice(...)) # outer names warning?
   contrast_list <- enlist_contrasts(model_data, ..., 'verbose' = verbose)
   params <- lapply(formulas, .make_parameters)
@@ -49,12 +59,27 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
   if (all.factors)
     glimpse <- rbind(glimpse, .glimpse_default_factors(model_data, factor_names))
 
+  if (clean.schemes)
+    glimpse$scheme <- .clean_schemes(glimpse$scheme)
+
   # The default factors don't need to be specified in the contrast list,
   # they'll just use their respective defaults by the model fitting function
   if (return.list)
     return(list("glimpse" = glimpse, "contrasts" = contrast_list))
 
+
   glimpse
+}
+
+.clean_schemes <- function(scheme_labels) {
+  vapply(scheme_labels,
+         function(x) {
+           x <- gsub("contr\\.poly","orth_polynomial",x)
+           gsub("(^contr\\.)|(_code$)","",x)
+         },
+         "char",
+         USE.NAMES = FALSE
+  )
 }
 
 #' Glimpse default factors
@@ -70,12 +95,14 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
 #'
 #' @return A table with information about the contrasts for all remaining factor
 #' columns
-.glimpse_default_factors <- function(model_data, set_factors) {
+.glimpse_default_factors <- function(model_data, set_factors = NULL) {
   factor_cols <- names(dplyr::select(model_data, where(is.factor)))
   new_factors <- factor_cols[!factor_cols %in% set_factors]
   ordered_factors <- names(dplyr::select(model_data, where(is.ordered)))
   is_ordered_factor <- new_factors %in% ordered_factors
   names(is_ordered_factor) <- new_factors
+
+  # Extract contrasts from the factor columns
   new_contrasts <- lapply(new_factors,
                           function(x) contrasts(model_data[[x]]))
 
@@ -92,13 +119,16 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
                           FUN.VALUE = "char")
   reference_levels <- vapply(new_factors,
                              function(x)
-                             ifelse(is_ordered_factor[x],
-                                    NA_character_,
-                                    as.character(levels(model_data[[x]])[[1L]])),
+                               ifelse(is_ordered_factor[x],
+                                      NA_character_,
+                                      as.character(levels(model_data[[x]])[[1L]])),
                              "char")
   intercept_interpretations <- vapply(new_contrasts, interpret_intercept, "char", USE.NAMES = FALSE)
   orthogonal_contrasts <- vapply(new_contrasts, is_orthogonal, TRUE)
-  dropped_trends <- rep(NA, length(new_factors))
+  dropped_trends <- rep(NA, length(new_factors)) # Trends are never dropped w/ R's defaults
+
+  .warn_if_nondefault(new_contrasts, new_factors, factor_sizes, is_ordered_factor)
+
   glimpse <- tibble::tibble("factor" = new_factors,
                             "n_levels" = factor_sizes,
                             "level_names" = level_names,
@@ -109,6 +139,43 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
                             "dropped_trends" = dropped_trends,
                             "explicitly_set" = FALSE)
   glimpse
+}
+
+.warn_if_nondefault <- function(contrasts, factor_names, factor_sizes, which_ordered) {
+  indices <- seq_along(factor_sizes)
+  factor_sizes <- unname(factor_sizes)
+  ord_fx <- str2lang(options('contrasts')[[1]][["ordered"]])
+  unord_fx <- str2lang(options('contrasts')[[1]][["unordered"]])
+
+  same_as_default <-
+    vapply(indices,
+           function(i) {
+             contr_mat <- contrasts[[i]]
+             if (which_ordered[i])
+               default_mat <- eval(as.call(c(ord_fx, factor_sizes[i])))
+             else
+               default_mat <- eval(as.call(c(unord_fx, factor_sizes[i])))
+
+             # Check if factor's contrast matrix is same as default settings
+             all(round(contr_mat - default_mat, 4) == 0)
+           },
+           TRUE)
+
+  if (sum(same_as_default) == length(factor_names))
+    return(invisible(1))
+
+  unord_str <- crayon::blue(as.character(unord_fx))
+  ord_str <- crayon::red(as.character(ord_fx))
+  names(which_ordered) <- factor_names
+  nondefaults <- vapply(factor_names[!same_as_default],
+                        function(x)
+                          ifelse(which_ordered[x], crayon::red(x), crayon::blue(x)),
+                        "char")
+  nondefaults <- paste(" - ", nondefaults, sep = "") |> paste(collapse = "\n")
+
+  warning(glue::glue("These factors not explicitly set and do not use default {unord_str} or {ord_str}. Glimpse table may be unreliable.
+             {nondefaults}"))
+
 }
 
 .get_dropped_trends <- function(params, formulas) {
@@ -127,12 +194,17 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
 .get_scheme_labels <- function(params, formulas) {
   vapply(seq_along(params), \(i) {
     scheme <- deparse1(params[[i]][["code_by"]]) # code_by param is a symbol or NA
+    # If it's a matrix call then it's taken to be custom contrasts
     if (grepl("^matrix\\(", scheme))
       return("custom")
+
+    # If it's a function name like contr.poly then use the name of the function
     function_used <- is.function(get(scheme,
                                      rlang::get_env(formulas[[i]])))
     if (function_used)
       return(scheme)
+
+    # Else it's a variable name, which is taken to be custom
     return("custom")
   },
   FUN.VALUE = "char",
@@ -141,12 +213,17 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
 }
 
 .get_reference_levels <- function(contrast_list, params, formulas) {
-  reference_levels <- vapply(params,
-                             function(param)
-                               ifelse(is.na(param[['reference_level']]),
-                                      NA_character_,
-                                      as.character(get(param[["reference_level"]]),
-                                                   rlang::get_env(formulas[[i]]))),
+  reference_levels <- vapply(seq_along(params),
+                             function(i){
+                               ref_level <- params[[i]][["reference_level"]]
+
+                               if (!is.symbol(ref_level) && is.na(ref_level))
+                                 return(NA_character_)
+
+                               # Will evaluate variables and syntactic literals accordingly
+                               as.character(eval(ref_level,
+                                                 rlang::get_env(formulas[[i]])))
+                             },
                              "char")
 
   # If a reference level wasn't specified, try to figure it out from the matrix
@@ -181,29 +258,3 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
   factor_levels[which_is_ref]
 }
 
-interpret_intercept <- function(contr_mat) {
-  .nlevels <- nrow(contr_mat)
-
-  # Account for polynomial contrasts with dropped trends, resulting in non-square
-  if (ncol(contr_mat) < (.nlevels - 1))
-    return("grand mean")
-  intercept_column <- .contrasts_to_hypotheses(contr_mat, nrow(contr_mat))[,1]
-
-  # Check if grand mean (most common), round to avoid floating point errors
-  is_grandmean <- all(round(intercept_column - (1/.nlevels), 10) == 0)
-  if (is_grandmean)
-    return("grand mean")
-
-
-  level_names <- rownames(contr_mat)
-
-  # Levels contribute to the intercept if they're not 0 in the intercept column
-  contributing_levels <- intercept_column != 0
-  if (sum(contributing_levels) > 0){
-    mean_levels <- paste(level_names[contributing_levels], collapse = ",")
-    return(glue::glue("mean({mean_levels})"))
-  }
-
-  # Add something more here later
-  return("custom weights")
-}

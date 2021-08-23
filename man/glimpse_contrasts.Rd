@@ -9,7 +9,8 @@ glimpse_contrasts(
   ...,
   return.list = FALSE,
   verbose = TRUE,
-  all.factors = TRUE
+  all.factors = TRUE,
+  clean.schemes = FALSE
 )
 }
 \arguments{
@@ -21,6 +22,13 @@ glimpse_contrasts(
 returned}
 
 \item{verbose}{Logical, defaults to FALSE, whether messages should be printed}
+
+\item{all.factors}{Logical, defaults to TRUE, whether the factors not
+explicitly set with formulas should be included}
+
+\item{clean.schemes}{Logical, defaults to FALSE, whether the contrast schemes
+should remove "contr." and "_code" from the names ("sum" and not "contr.sum"
+or "sum_code")}
 }
 \value{
 A dataframe is return.list is FALSE, a list with a dataframe and list

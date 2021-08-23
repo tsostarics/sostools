@@ -4,7 +4,7 @@
 \alias{.glimpse_default_factors}
 \title{Glimpse default factors}
 \usage{
-.glimpse_default_factors(model_data, set_factors)
+.glimpse_default_factors(model_data, set_factors = NULL)
 }
 \arguments{
 \item{model_data}{Dataframe}
