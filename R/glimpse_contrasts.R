@@ -114,7 +114,9 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
 .get_dropped_trends <- function(params, formulas) {
   vapply(seq_along(params),
          function(i){
-           trends <- eval(params[[i]][['drop_trends']], rlang::get_env(formulas[[i]]))
+           trends <- eval(params[[i]][['drop_trends']],
+                          rlang::get_env(formulas[[i]]))
+           # trends is NA if nothing was passed
            if (NA %in% trends)
              return(NA_character_)
            paste(trends, collapse = ",")
@@ -124,10 +126,11 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
 
 .get_scheme_labels <- function(params, formulas) {
   vapply(seq_along(params), \(i) {
-    scheme <- deparse1(params[[i]][["code_by"]])
+    scheme <- deparse1(params[[i]][["code_by"]]) # code_by param is a symbol or NA
     if (grepl("^matrix\\(", scheme))
       return("custom")
-    function_used <- is.function(get(scheme, rlang::get_env(formulas[[i]])))
+    function_used <- is.function(get(scheme,
+                                     rlang::get_env(formulas[[i]])))
     if (function_used)
       return(scheme)
     return("custom")
@@ -142,9 +145,11 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
                              function(param)
                                ifelse(is.na(param[['reference_level']]),
                                       NA_character_,
-                                      as.character(param[["reference_level"]])),
+                                      as.character(get(param[["reference_level"]]),
+                                                   rlang::get_env(formulas[[i]]))),
                              "char")
 
+  # If a reference level wasn't specified, try to figure it out from the matrix
   for(i in seq_along(reference_levels)) {
     if (is.na(reference_levels[i])){
       intuition <- .intuit_reference_level(contrast_list[[i]],
@@ -157,16 +162,19 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
 }
 
 .intuit_reference_level <- function(contr_mat, factor_levels) {
+  # Dropped factors entails polynomials, which dont have a reference level
   if (ncol(contr_mat) < (length(factor_levels) - 1))
     return(NA)
+
   hyp_mat <- .contrasts_to_hypotheses(contr_mat, nrow(contr_mat))
 
-  # Matrix gets converted to vector if there are only two levels
-  no_intercept <- hyp_mat[,-1]
-  if (length(no_intercept) == 2)
-    no_intercept <- matrix(no_intercept, nrow = 2)
+  # Matrix[,-1] gets converted to a vector if there are only two levels
+  level_matrix <- hyp_mat[,-1]
+  if (length(level_matrix) == 2)
+    level_matrix <- matrix(level_matrix, nrow = 2)
 
-  which_is_ref <- apply(no_intercept, 1, function(x) all(x < 0))
+  # Reference level should be the one with an all negative row
+  which_is_ref <- apply(level_matrix, 1, function(x) all(x < 0))
   if (sum(which_is_ref) != 1)
     return(NA)
 
@@ -175,12 +183,13 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=TRUE
 
 interpret_intercept <- function(contr_mat) {
   .nlevels <- nrow(contr_mat)
+
   # Account for polynomial contrasts with dropped trends, resulting in non-square
   if (ncol(contr_mat) < (.nlevels - 1))
     return("grand mean")
   intercept_column <- .contrasts_to_hypotheses(contr_mat, nrow(contr_mat))[,1]
 
-  # Check if grand mean (most common)
+  # Check if grand mean (most common), round to avoid floating point errors
   is_grandmean <- all(round(intercept_column - (1/.nlevels), 10) == 0)
   if (is_grandmean)
     return("grand mean")
@@ -188,7 +197,7 @@ interpret_intercept <- function(contr_mat) {
 
   level_names <- rownames(contr_mat)
 
-  # Check if 1 level (eg contr.treatment)
+  # Levels contribute to the intercept if they're not 0 in the intercept column
   contributing_levels <- intercept_column != 0
   if (sum(contributing_levels) > 0){
     mean_levels <- paste(level_names[contributing_levels], collapse = ",")
