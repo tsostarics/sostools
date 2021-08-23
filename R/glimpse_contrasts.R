@@ -38,10 +38,11 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALS
                             "n_levels" = factor_sizes,
                             "level_names" = level_names,
                             "scheme" = scheme_labels,
-                            "reference_level" = reference_levels,
+                            "reference" = reference_levels,
                             "intercept" = intercept_interpretations,
                             "orthogonal" = orthogonal_contrasts,
-                            "dropped_trends" = dropped_trends)
+                            "dropped_trends" = dropped_trends,
+                            "explicitly_set" = TRUE)
 
 
 
@@ -61,7 +62,8 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALS
 #' Given a dataframe with some factor columns and a character vector of
 #' which columns you've already set yourself, look at all the other
 #' factor columns and get a glimpse at how they're treated by the defaults
-#' specified in `options('contrasts')`
+#' specified in `options('contrasts')`. Reference level is assumed to be the
+#' first level for unordered factors and nonexistent for ordered factors.
 #'
 #' @param model_data Dataframe
 #' @param set_factors Explicitly set columns to ignore
@@ -101,10 +103,11 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALS
                             "n_levels" = factor_sizes,
                             "level_names" = level_names,
                             "scheme" = scheme_labels,
-                            "reference_level" = reference_levels,
+                            "reference" = reference_levels,
                             "intercept" = intercept_interpretations,
                             "orthogonal" = orthogonal_contrasts,
-                            "dropped_trends" = dropped_trends)
+                            "dropped_trends" = dropped_trends,
+                            "explicitly_set" = FALSE)
   glimpse
 }
 
@@ -139,7 +142,7 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALS
                              function(param)
                                ifelse(is.na(param[['reference_level']]),
                                       NA_character_,
-                                      deparse1(param[["reference_level"]])),
+                                      as.character(param[["reference_level"]])),
                              "char")
 
   for(i in seq_along(reference_levels)) {
@@ -157,7 +160,13 @@ glimpse_contrasts <- function(model_data, ..., return.list = FALSE, verbose=FALS
   if (ncol(contr_mat) < (length(factor_levels) - 1))
     return(NA)
   hyp_mat <- .contrasts_to_hypotheses(contr_mat, nrow(contr_mat))
-  which_is_ref <- apply(hyp_mat[,-1], 1, function(x) all(x < 0))
+
+  # Matrix gets converted to vector if there are only two levels
+  no_intercept <- hyp_mat[,-1]
+  if (length(no_intercept) == 2)
+    no_intercept <- matrix(no_intercept, nrow = 2)
+
+  which_is_ref <- apply(no_intercept, 1, function(x) all(x < 0))
   if (sum(which_is_ref) != 1)
     return(NA)
 
