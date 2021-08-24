@@ -96,9 +96,9 @@ glimpse_contrasts <- function(model_data,
 #' @return A table with information about the contrasts for all remaining factor
 #' columns
 .glimpse_default_factors <- function(model_data, set_factors = NULL) {
-  factor_cols <- names(dplyr::select(model_data, where(is.factor)))
+  factor_cols <- .cols_where(model_data, is.factor, return.names = TRUE)
   new_factors <- factor_cols[!factor_cols %in% set_factors]
-  ordered_factors <- names(dplyr::select(model_data, where(is.ordered)))
+  ordered_factors <- .cols_where(model_data, is.ordered, return.names = TRUE)
   is_ordered_factor <- new_factors %in% ordered_factors
   names(is_ordered_factor) <- new_factors
 
@@ -140,6 +140,17 @@ glimpse_contrasts <- function(model_data,
                             "explicitly_set" = FALSE)
   glimpse
 }
+
+.cols_where <- function(model_data, fx, use.names = FALSE, return.names = FALSE) {
+  cnames <- colnames(model_data)
+  cols <- vapply(cnames,
+                 function(x) fx(model_data[[x]]),
+                 FUN.VALUE = TRUE,
+                 USE.NAMES = use.names)
+  if (return.names)
+    return(cnames[cols])
+  cols
+  }
 
 .warn_if_nondefault <- function(contrasts, factor_names, factor_sizes, which_ordered) {
   indices <- seq_along(factor_sizes)
@@ -227,8 +238,8 @@ glimpse_contrasts <- function(model_data,
                              "char")
 
   # If a reference level wasn't specified, try to figure it out from the matrix
-  for(i in seq_along(reference_levels)) {
-    if (is.na(reference_levels[i])){
+  for (i in seq_along(reference_levels)) {
+    if (is.na(reference_levels[i])) {
       intuition <- .intuit_reference_level(contrast_list[[i]],
                                            rownames(contrast_list[[i]]))
       if (!is.na(intuition))
