@@ -15,14 +15,15 @@
 #' of the given factor's contrasts
 #'
 #' @importFrom stats model.matrix
+#' @export
 decompose_contrasts <- function(model_data, factor_col, extract.seq = NULL, extract.to = NULL) {
   # insert tidy eval for factor col here for unquoted column later
   # insert vectorized support for multiple columns later
 
   if (missing(extract.seq))
-    extract.seq <- seq_len(nlevels(model_data[[factor_col]]))
+    extract.seq <- seq_len(nlevels(model_data[[factor_col]]))[-1]
 
-  components <- model.matrix(formula(paste("~",factor_col)), model_data)[,extract.seq]
+  components <- model.matrix(formula(paste("~",factor_col)), model_data)[,extract.seq+1]
   if (!missing(extract.to)){
     if (length(extract.to) != length(extract.seq))
       stop("Number of names in extract.to should equal number of desired components")

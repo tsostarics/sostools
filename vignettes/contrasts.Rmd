@@ -186,8 +186,13 @@ name of a factor column, and the right hand side should be of the following:
 names should be quoted, if the label happens to be numeric you can leave the number
 unquoted. You can also use an unquoted variable name that contains the reference
 level.
-- **AND** An optional specification for which level to use as the intercept. Same
+- ***AND*** An optional specification for which level to use as the intercept following
+a `*`. Same
 syntax as the reference level, see section titled "Changing Underlying Intercept"
+- ***AND*** If you use polynomial contrasts, an optional sequence (integer vector)
+of which trends you would like to drop following a `-`. Typically of the form 
+`- a:b` where a and b are integers (eg `- 3:5` to drop cubic through 5th power
+trends)
 
 When using this method you should set contrasts for all factors. You'll receive
 a warning if you don't set one or more:
@@ -450,6 +455,125 @@ you should go back and read the paper cited at the top of this vignette again.
 Remember that when setting matrices yourself, you should specify the row names
 to be your factor levels and your column names to be informative comparison 
 labels.
+
+## Dropping trends from polynomials
+
+When using polynomial contrasts you can drop higher level trends for the sake
+of parsimony. However, even when using
+orthogonal polynomials, your estimates for each trend can differ depending on
+whether higher trends are included. If you do want to remove higher level trends
+though, you can use the `-` operator in the contrast formula. Let's use the
+`diamonds` data set as an example.
+
+```{r}
+library(ggplot2,diamonds) # load just the diamonds dataset
+
+# Clarity has 8 levels, so we'll remove anything higher than the cubic trend
+my_contrasts <- enlist_contrasts(diamonds,
+                                 clarity ~ contr.poly - 4:7)
+
+# Higher trends removed
+lm(price ~ clarity, data = diamonds, contrasts = my_contrasts) %>% 
+  broom::tidy()
+
+# Higher trends retained
+lm(price ~ clarity, data = diamonds) %>% 
+  broom::tidy()
+
+# Trying to manually remove trends on the contrast in the data set doesn't work
+diamonds1 <- diamonds
+contrasts(diamonds1$clarity) <- contr.poly(8)[,1:3]
+lm(price ~ clarity, data = diamonds1) %>% 
+  broom::tidy()
+
+# Decomposing the contrasts to create new columns for the first three trends
+# also works well (decompose_contrasts is still experimental)
+diamonds2 <- decompose_contrasts(diamonds, "clarity", 1:3)
+lm(price ~ clarity.L + clarity.Q + clarity.C, data = diamonds2) %>% 
+  broom::tidy()
+```
+
+Note how when we tried to remove the trends on the factor column 
+`diamonds1$clarity` it doesn't work *and* it messes up the labels for the terms.
+This also means that you cannot drop trends with `set_contrasts`, and it will
+throw a warning that it will ignore that argument when it's used:
+
+```{r, eval=FALSE}
+set_contrasts(diamonds, clarity ~ contr.poly - 4:7)
+```
+
+# Glimpse Contrasts
+
+This is some newer functionality to gain some quick insight into the factors used
+in your dataset. It uses the same syntax as `enlist_contrasts` and `set_contrasts`
+and provides a dataframe with some useful information.
+
+```{r}
+tstdf <- mtcars
+tstdf$cyl <- factor(tstdf$cyl)
+contrast_info <- glimpse_contrasts(tstdf, 
+                                   vs ~ contr.treatment,
+                                   am ~ scaled_sum_code + 1,
+                                   gear ~ helmert_code,
+                                   carb ~ contr.poly,
+                                   all.factors = TRUE)
+
+contrast_info
+```
+
+In this table we can easily reference what contrast scheme we used, what its
+reference level is when applicable, and how it may affect the interpretation
+of the intercept. Here, the intercept is to be interpreted as the average unit
+(whatever that is for your model) at level `0` of `vs` and level `4` of `cyl`,
+while it's marginalized across the other predictors. Note that while helmert
+and reverse helmert schemes don't have a reference level per se, the reference
+level shown in the table helps to show what the starting point is in case you
+forget which direction it's going. Here, the levels are `3, 4, 5` and comparisons
+start at `5`, which means they'll be going down: `4-5` then `3-(4,5)`.
+
+We can also see if any are orthogonal or not and whether we
+explicitly set them or if R used the system defaults. Note that you shouldn't
+call `glimpse_contrasts` on a dataframe you've already constructed with
+`set_contrasts`. You might think that using this would require you to copy
+and paste all the formulas twice, once to `enlist/set_contrasts` and again
+to `glimpse_contrasts`, but you can invoke `enlist_contrasts` from `glimpse_contrasts`
+using the `return.list` argument if you want to do it in one go. Doing so
+will return a list where the first item is the glimpse dataframe and the
+second is the list of named contrast matrices that can be passed to a model
+fitting function.
+
+```{r}
+contrast_info <- glimpse_contrasts(tstdf, 
+                                   vs ~ contr.treatment,
+                                   am ~ scaled_sum_code + 1,
+                                   gear ~ helmert_code,
+                                   carb ~ contr.poly,
+                                   all.factors = TRUE,
+                                   return.list = TRUE)
+
+my_contrasts <- contrast_info$contrasts
+contrast_glimpse <- contrast_info$glimpse
+```
+
+We can also clean up the scheme names if we want to remove the "contr." and 
+"_code" parts.
+
+```{r}
+contrast_info <- glimpse_contrasts(tstdf, 
+                                   vs ~ contr.treatment,
+                                   am ~ scaled_sum_code + 1,
+                                   gear ~ helmert_code,
+                                   carb ~ contr.poly,
+                                   all.factors = TRUE,
+                                   return.list = TRUE,
+                                   clean.schemes = TRUE)
+contrast_info$glimpse
+```
+
+Note that `contr.poly` will be changed to `orth_polynomial` when you do this
+to denote that you're using *orthogonal* polynomials and not raw polynomials,
+since just `poly` could be confusing.
+
 
 # Conclusion
 
