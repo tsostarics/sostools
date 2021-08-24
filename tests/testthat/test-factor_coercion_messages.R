@@ -21,3 +21,8 @@ test_that("Messaging if user tries to reset ordered factors works", {
   expect_message(enlist_contrasts(my_df, gear ~ scaled_sum_code),
                  regexp = "These factors are ordered")
 })
+
+test_that("Messaging if factor coercion occurs works",{
+  expect_message(.msg_if_coerced_to_factors(c('a','b')),
+                 regexp = "Converting these to factors")
+})
