@@ -62,8 +62,8 @@ test_that("Warning with non default contrasts works", {
 
 test_that("Grouping columns aren't detected as ordered", {
   tst <- mtcars %>%
-    mutate(cyl = factor(cyl), carb = ordered(carb), gear = factor(gear)) %>%
-    group_by(cyl)
+    dplyr::mutate(cyl = factor(cyl), carb = ordered(carb), gear = factor(gear)) %>%
+    dplyr::group_by(cyl)
   # Avoid message from .warn_if_nondefault
   expect_warning(glimpse_contrasts, NA)
 })
