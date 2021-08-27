@@ -10,7 +10,8 @@ glimpse_contrasts(
   return.list = FALSE,
   verbose = TRUE,
   all.factors = TRUE,
-  clean.schemes = FALSE
+  clean.schemes = FALSE,
+  incl.one.levels = FALSE
 )
 }
 \arguments{
@@ -29,6 +30,9 @@ explicitly set with formulas should be included}
 \item{clean.schemes}{Logical, defaults to FALSE, whether the contrast schemes
 should remove "contr." and "_code" from the names ("sum" and not "contr.sum"
 or "sum_code")}
+
+\item{incl.one.levels}{Logical, should factors with only one level be included
+in the output? Default is FALSE to omit}
 }
 \value{
 A dataframe is return.list is FALSE, a list with a dataframe and list

@@ -66,6 +66,18 @@ enlist_contrasts <- function(model_data, ...,  verbose=TRUE) {
   if (verbose)
     .msg_if_remaining_factors(model_data, names(vars_in_model))
 
+  # Ignore factors with only 1 level to avoid undefined contrasts
+  is_onelevel_factor <- vapply(names(vars_in_model),
+                             function(x) nlevels(model_data[[x]]) == 1L,
+                             TRUE)
+
+  formulas <- formulas[!is_onelevel_factor]
+  char_formulas <- char_formulas[!is_onelevel_factor]
+  vars_in_model <- vars_in_model[!is_onelevel_factor]
+
+  if (verbose)
+    .warn_if_onelevel(names(is_onelevel_factor)[is_onelevel_factor])
+
   if (!all(vars_in_model))
     stop(glue::glue("{names(vars_in_model)[!vars_in_model]} not found in model data\n",
                     .trim = FALSE))

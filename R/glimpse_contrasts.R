@@ -16,6 +16,8 @@
 #' @param clean.schemes Logical, defaults to FALSE, whether the contrast schemes
 #' should remove "contr." and "_code" from the names ("sum" and not "contr.sum"
 #' or "sum_code")
+#' @param incl.one.levels Logical, should factors with only one level be included
+#' in the output? Default is FALSE to omit
 #'
 #' @return A dataframe is return.list is FALSE, a list with a dataframe and list
 #' of named contrasts if TRUE.
@@ -25,10 +27,19 @@ glimpse_contrasts <- function(model_data,
                               return.list = FALSE,
                               verbose=TRUE,
                               all.factors=TRUE,
-                              clean.schemes = FALSE) {
+                              clean.schemes = FALSE,
+                              incl.one.levels = FALSE) {
   formulas <- suppressWarnings(rlang::dots_splice(...)) # outer names warning?
   contrast_list <- enlist_contrasts(model_data, ..., 'verbose' = verbose)
   params <- lapply(formulas, .make_parameters)
+
+  # Ignore factors with only 1 level to avoid undefined contrasts
+  is_onelevel_factor <- vapply(params,
+                               function(x) nlevels(model_data[[x[["factor_col"]]]]) == 1L,
+                               TRUE)
+
+  formulas <- formulas[!is_onelevel_factor]
+  params <- params[!is_onelevel_factor]
 
   # Extract various information
   factor_names <- names(contrast_list)
@@ -57,7 +68,7 @@ glimpse_contrasts <- function(model_data,
 
 
   if (all.factors)
-    glimpse <- rbind(glimpse, .glimpse_default_factors(model_data, factor_names))
+    glimpse <- rbind(glimpse, .glimpse_default_factors(model_data, factor_names, incl.one.levels, verbose))
 
   if (clean.schemes)
     glimpse$scheme <- .clean_schemes(glimpse$scheme)
@@ -92,32 +103,33 @@ glimpse_contrasts <- function(model_data,
 #'
 #' @param model_data Dataframe
 #' @param set_factors Explicitly set columns to ignore
+#' @param incl.one.levels Should factor columns with only 1 level be included? Default FALSE
+#' @param verbose Defaults to FALSE, should messages and warnings be printed?
 #'
 #' @return A table with information about the contrasts for all remaining factor
 #' columns
-.glimpse_default_factors <- function(model_data, set_factors = NULL) {
-  factor_cols <- .cols_where(model_data, is.factor, return.names = TRUE)
-  new_factors <- factor_cols[!factor_cols %in% set_factors]
-  ordered_factors <- .cols_where(model_data, is.ordered, return.names = TRUE)
-  is_ordered_factor <- new_factors %in% ordered_factors
-  names(is_ordered_factor) <- new_factors
+.glimpse_default_factors <- function(model_data,
+                                     set_factors = NULL,
+                                     incl.one.levels = FALSE,
+                                     verbose = TRUE) {
+  fct_info <- .get_factor_info(model_data, set_factors, verbose)
+  unset_factors <- fct_info[["unset_factors"]]
+  is_ordered_factor <- fct_info[["is_ordered_factor"]]
 
   # Extract contrasts from the factor columns
-  new_contrasts <- lapply(new_factors,
-                          function(x) contrasts(model_data[[x]]))
+  new_contrasts <- lapply(unset_factors, function(x) contrasts(model_data[[x]]))
 
-
-  factor_sizes <- vapply(new_factors,
+  factor_sizes <- vapply(unset_factors,
                          function(x) nlevels(model_data[[x]]),
                          FUN.VALUE = 1L)
-  level_names <- lapply(new_factors, function(x) levels(model_data[[x]]))
-  scheme_labels <- vapply(new_factors,
+  level_names <- lapply(unset_factors, function(x) levels(model_data[[x]]))
+  scheme_labels <- vapply(unset_factors,
                           function(x)
                             ifelse(is_ordered_factor[x],
                                    options('contrasts')[[1]]["ordered"],
                                    options('contrasts')[[1]]["unordered"]),
                           FUN.VALUE = "char")
-  reference_levels <- vapply(new_factors,
+  reference_levels <- vapply(unset_factors,
                              function(x)
                                ifelse(is_ordered_factor[x],
                                       NA_character_,
@@ -125,24 +137,94 @@ glimpse_contrasts <- function(model_data,
                              "char")
   intercept_interpretations <- vapply(new_contrasts, interpret_intercept, "char", USE.NAMES = FALSE)
   orthogonal_contrasts <- vapply(new_contrasts, is_orthogonal, TRUE)
-  dropped_trends <- rep(NA, length(new_factors)) # Trends are never dropped w/ R's defaults
+  dropped_trends <- rep(NA, length(unset_factors)) # Trends are never dropped w/ R's defaults
 
-  .warn_if_nondefault(new_contrasts, new_factors, factor_sizes, is_ordered_factor)
+  if (verbose)
+    .warn_if_nondefault(new_contrasts, unset_factors, factor_sizes, is_ordered_factor)
 
-  glimpse <- tibble::tibble("factor" = new_factors,
-                            "n_levels" = factor_sizes,
-                            "level_names" = level_names,
-                            "scheme" = scheme_labels,
-                            "reference" = reference_levels,
-                            "intercept" = intercept_interpretations,
-                            "orthogonal" = orthogonal_contrasts,
+  glimpse <- tibble::tibble("factor"         = unset_factors,
+                            "n_levels"       = factor_sizes,
+                            "level_names"    = level_names,
+                            "scheme"         = scheme_labels,
+                            "reference"      = reference_levels,
+                            "intercept"      = intercept_interpretations,
+                            "orthogonal"     = orthogonal_contrasts,
                             "dropped_trends" = dropped_trends,
                             "explicitly_set" = FALSE)
+
+  if (incl.one.levels)
+    glimpse <- rbind(glimpse, .make_placeholder_glimpse(model_data, fct_info[["one_level_factors"]]))
+
   glimpse
 }
 
+#' Make glimpse for 1-level factors
+#'
+#' If the user wants factors with only one level included, this will create
+#' the table to present that information. It's a lot of NAs because contrasts
+#' aren't defined for only 1 level.
+#'
+#' @param model_data Model data
+#' @param one_level_factors Which factors are one level
+#'
+#' @return A tibble with limited information about one level factors
+.make_placeholder_glimpse <- function(model_data, one_level_factors) {
+  # Will be a list of 1-length character vectors to match list column type
+  level_names <- lapply(one_level_factors,
+                        function(x) levels(model_data[[x]]))
+
+  tibble::tibble("factor"         = one_level_factors,
+                "n_levels"       = 1L,
+                "level_names"    = level_names,
+                "scheme"         = NA_character_,
+                "reference"      = NA_character_,
+                "intercept"      = NA_character_,
+                "orthogonal"     = NA,
+                "dropped_trends" = NA_character_,
+                "explicitly_set" = NA)
+}
+
+.get_factor_info <- function(model_data, set_factors = NULL, verbose = TRUE){
+  all_factors <- .cols_where(model_data, is.factor, return.names = TRUE)
+  unset_factors <- all_factors[!all_factors %in% set_factors]
+  is_ordered_factor <- unset_factors %in% .cols_where(model_data, is.ordered, return.names = TRUE)
+  names(is_ordered_factor) <- unset_factors
+
+  # Filter out any factors that only have 1 level to avoid undefined contrasts
+  # Happens when character vectors with only 1 value are converted to a factor
+  # without specifying the levels parameter in factor()
+  is_one_level <- vapply(unset_factors,
+                         function(x) nlevels(model_data[[x]]) == 1L,
+                         TRUE)
+  is_ordered_factor <- is_ordered_factor[!is_one_level]
+  unset_factors <- unset_factors[!is_one_level]
+  one_level_factors <- names(is_one_level)[is_one_level]
+
+  list("unset_factors" = unset_factors,
+       "is_ordered_factor" = is_ordered_factor,
+       "one_level_factors" <- one_level_factors)
+
+}
+
+
+#' Get columns where
+#'
+#' Helper to avoid the use of tidyselect and dplyr::select, returns either a
+#' logical vector (optionally named) or a character vector of which columns
+#' satisfy the given function
+#'
+#' @param model_data Model data
+#' @param fx Function to apply, must be something that returns a logical value.
+#' Usually either `is.factor` or `is.ordered`
+#' @param use.names Whether the resulting vector should be named
+#' @param return.names Whether names (where the fx returns TRUE) should be
+#' returned instead of a logical vector. Overwrites use.names.
+#'
+#' @return optionally named logical vector or character vector
 .cols_where <- function(model_data, fx, use.names = FALSE, return.names = FALSE) {
   cnames <- colnames(model_data)
+  if (return.names)
+    use.names <- TRUE
   cols <- vapply(cnames,
                  function(x) fx(model_data[[x]]),
                  FUN.VALUE = TRUE,
@@ -150,9 +232,25 @@ glimpse_contrasts <- function(model_data,
   if (return.names)
     return(cnames[cols])
   cols
-  }
+}
 
-.warn_if_nondefault <- function(contrasts, factor_names, factor_sizes, which_ordered) {
+#' Warn user if nondefault contrasts are set
+#'
+#' R automatically assigns specific contrast schemes to ordered and unordered
+#' factors as specified in `options('contrasts')` but users are of course
+#' free to set these on the factor themselves. But, if they do this outside
+#' of a call to `glimpse_contrasts` it's hard and time consuming to check what they
+#' set against the different possible common schemes. So, rather than checking
+#' all possible combinations, this will only check against the defaults R already
+#' uses and alert the user if something else is set.
+#'
+#' @param contrast_list List of contrasts like that generated by `enlist_contrasts`
+#' @param factor_names Names of the factors, also the names of the contrast list
+#' @param factor_sizes Number of levels for each factor
+#' @param which_ordered Which of the factors are ordered
+#'
+#' @return Warns if non default contrasts are set
+.warn_if_nondefault <- function(contrast_list, factor_names, factor_sizes, which_ordered) {
   indices <- seq_along(factor_sizes)
   factor_sizes <- unname(factor_sizes)
   ord_fx <- str2lang(options('contrasts')[[1]][["ordered"]])
@@ -161,7 +259,7 @@ glimpse_contrasts <- function(model_data,
   same_as_default <-
     vapply(indices,
            function(i) {
-             contr_mat <- contrasts[[i]]
+             contr_mat <- contrast_list[[i]]
              if (which_ordered[i])
                default_mat <- eval(as.call(c(ord_fx, factor_sizes[i])))
              else

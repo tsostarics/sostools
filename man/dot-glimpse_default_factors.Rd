@@ -4,12 +4,21 @@
 \alias{.glimpse_default_factors}
 \title{Glimpse default factors}
 \usage{
-.glimpse_default_factors(model_data, set_factors = NULL)
+.glimpse_default_factors(
+  model_data,
+  set_factors = NULL,
+  incl.one.levels = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{model_data}{Dataframe}
 
 \item{set_factors}{Explicitly set columns to ignore}
+
+\item{incl.one.levels}{Should factor columns with only 1 level be included? Default FALSE}
+
+\item{verbose}{Defaults to FALSE, should messages and warnings be printed?}
 }
 \value{
 A table with information about the contrasts for all remaining factor
