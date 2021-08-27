@@ -565,19 +565,27 @@ my_contrasts <- contrast_info$contrasts
 contrast_glimpse <- contrast_info$glimpse
 ```
 
+Alternatively, you can specify the contrast formulas in a list and save
+that to a variable, then pass that around to the different functions.
+
+```{r}
+schemes <- list(vs ~ contr.treatment,
+                am ~ scaled_sum_code + 1,
+                gear ~ helmert_code,
+                carb ~ contr.poly)
+
+contrast_glimpse <- glimpse_contrasts(tstdf, schemes)
+contrast_glimpse # Review if needed
+tstdf <- set_contrasts(tstdf, schemes, verbose = FALSE)
+```
+
+
 We can also clean up the scheme names if we want to remove the "contr." and 
 "_code" parts.
 
 ```{r}
-contrast_info <- glimpse_contrasts(tstdf, 
-                                   vs ~ contr.treatment,
-                                   am ~ scaled_sum_code + 1,
-                                   gear ~ helmert_code,
-                                   carb ~ contr.poly,
-                                   all.factors = TRUE,
-                                   return.list = TRUE,
-                                   clean.schemes = TRUE)
-contrast_info$glimpse
+contrast_info <- glimpse_contrasts(tstdf, schemes, clean.schemes = TRUE)
+contrast_info
 ```
 
 Note that `contr.poly` will be changed to `orth_polynomial` when you do this
