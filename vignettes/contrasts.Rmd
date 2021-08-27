@@ -32,6 +32,7 @@ reading the following:
 
 - [UCLA R Library Contrast Coding Systems for Categorical Variables](https://stats.idre.ucla.edu/r/library/r-library-contrast-coding-systems-for-categorical-variables/)
 - [How to capitalize on a priori contrasts in linear (mixed) models: A tutorial](https://www.sciencedirect.com/science/article/pii/S0749596X19300695)
+- [Regresion modeling for linguistic data (preprint)](https://osf.io/pnumg/)
 
 There is a very small overview of hypothesis matrices in the second to last
 section, but I will not provide a discussion of orthogonality as it relates
@@ -195,7 +196,10 @@ of which trends you would like to drop following a `-`. Typically of the form
 trends)
 
 When using this method you should set contrasts for all factors. You'll receive
-a warning if you don't set one or more:
+a message if you don't set one or more, along with what the default contrasts
+are as specified by `options('contrasts')` for both ordered and unordered factors.
+While not shown in this vignette, these are also color coded (blue for unordered,
+red for ordered).
 
 ```{r}
 contrast_list <- enlist_contrasts(mdl_data, carb ~ helmert_code)
@@ -208,7 +212,7 @@ fit bayesian models) does not have a `contrasts` argument. This means we need
 to set the contrasts on the dataframe itself. But, this doesn't mean we need
 to revert to multiple `contrasts<-` lines. We can use `set_contrasts`, which
 uses the same syntax as `enlist_contrasts` but returns a new copy of the dataframe
-where the factor levels are set.
+where the factor levels are set. The usual warnings and messages still apply.
 
 ```{r}
 mdl_data2 <- 
@@ -228,12 +232,13 @@ coefficients in general, `brms` actually changes the names slightly when preppin
 the model for running in stan. For example, using backward difference coding gives
 coefficient names like `2-1`, but this gets changed to `2M1`. If you're doing
 programmatic setting of priors or something, it's something to keep in mind.
+Maybe I'll add some functionality around this in the future.
 
 ## Note about 2 level factors
 
 Coding factors with only 2 levels is a bit tricky conceptually because there
-is only one possible comparison you can make. Thus, many of the different coding
-schemes end up being mathematically equivalent.
+is only one possible comparison you can make: level A to level B. Thus, many of 
+the different coding schemes end up being mathematically equivalent.
 
 ```{r}
 helmert_code(2) # Compare k to >k
@@ -247,7 +252,8 @@ something like this:
 - `0, 1` from `contr.treatment(2)` puts the intercept at the reference level, 
 which we don't always want
 - `-1, 1` from `-contr.sum(2)` keeps the same reference level and the intercept 
-is now the grand mean, but this tests half the difference between levels
+is now the grand mean, but this tests half the difference between levels (i.e.,
+the distance between a level and the intercept)
 - `-.5, .5` from `-contr.sum(2)/2` scales the estimate so it tests the full 
 difference between levels.
 
@@ -267,7 +273,7 @@ difference between, each level and the reference level, you need to use the
 following matrix, which this package provides a helper for:
 
 ```{r}
-scaled_sum_code(4) %>% fractions()
+scaled_sum_code(4) %>% MASS::fractions()
 ```
 
 We can verify this by looking at the hypothesis matrices.
@@ -299,15 +305,17 @@ the reference level. We use the term *scaled sum coding*.
 
 It's worth noting that the terms "sum coding" and "scaled sum coding" are
 ***not*** consistent across disciplines. Other terms that are used are simple
-coding, deviation coding, sum to zero coding, and contrast coding. I recommend
-that you choose a term from your discipline and stick to it, but also provide
-the exact contrast or hypothesis matrices in an appendix, preregistration, or
-supplementary material. 
+coding, deviation coding, sum to zero coding, and contrast coding. When
+referring specifically to coding factors with 2 levels, sometimes the numbers
+are used as in 0/1 coding, -1/1 coding, -.5/+.5 coding. I recommend that you
+choose a term from your discipline and stick to it, but also provide the exact
+contrast or hypothesis matrices in an appendix, preregistration, or
+supplementary material.
 
 ## Changing Underlying Intercept
 
-I know I said I wouldn't give a discussion on how contrasts are derived
-matrices, but there's one additional functionality that kind of necessitates
+I know I said I wouldn't give a discussion on how contrasts are derived, but 
+there's one additional functionality that kind of necessitates
 describing the process a little. We know that contrast matrices have $k$ rows
 and $k-1$ columns for our $k-1$ comparisons (derived from $k-1$ degrees of
 freedom). But models also give an intercept term: where does that come from?
@@ -338,7 +346,8 @@ of the hypotheses you want to test. Turns out those hypotheses actually underlie
 this matrix, and linear algebra transformations can be used to go between the two.
 For more details, see the paper on capitalizing on a priori contrasts. For now
 just know that we can take the inverse of the transpose of a matrix to go between
-the two.
+the two (sometimes the transpose is ommitted depending on the author, which means
+you'd go back and forth between interpreting columns or rows as comparisons).
 
 ```{r}
 contrast_matrix <- 
@@ -375,7 +384,7 @@ don't contribute to it. Each comparison is now the difference between a level an
 the reference level. If that's the case, we should have just recreated treatment
 coding! But we need to convert from our hypothesis matrix to the contrast matrix.
 Remind yourself what the contrast matrix from treatment coding should look 
-like before proceeding.
+like before proceeding (hint: lots of 0s and 1s).
 
 ```{r}
 # Inverse of the transpose, remove the first column to get contrasts
@@ -498,8 +507,9 @@ Note how when we tried to remove the trends on the factor column
 This also means that you cannot drop trends with `set_contrasts`, and it will
 throw a warning that it will ignore that argument when it's used:
 
-```{r, eval=FALSE}
-set_contrasts(diamonds, clarity ~ contr.poly - 4:7)
+```{r}
+# Just show the messages, not the output
+invisible(set_contrasts(diamonds, clarity ~ contr.poly - 4:7))
 ```
 
 # Glimpse Contrasts
