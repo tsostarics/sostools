@@ -59,7 +59,7 @@ test_propodds <- function(ord_data, model_formula) {
 
 .run_single_glm <- function(ord_data, mdl_fx, coef_fx, model_formula, response_var, j) {
   # Recode values below threshold to 1, above threshold to 0, update model formula
-  new_data <- mutate(ord_data, j_response = as.numeric(scale_response <= j))
+  new_data <- dplyr::mutate(ord_data, j_response = as.numeric(scale_response <= j))
   model_formula[[2L]] <- "j_response"
   glm_formula <- stats::formula(paste(model_formula[[2L]],"~",model_formula[[3L]]))
   mdl <- mdl_fx(glm_formula, family = "binomial", data = new_data)
