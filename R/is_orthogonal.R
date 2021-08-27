@@ -14,7 +14,7 @@ is_orthogonal <- function(.contrasts) {
   vapply(.contrasts,
          function(m) {
            # Orthogonal polynomial contrasts have floating point issues
-           cor_mat <- round(cor(m), digits = 10L)
+           cor_mat <- round(stats::cor(m), digits = 10L)
            cor_upper <- cor_mat[upper.tri(cor_mat)] == 0
            cor_lower <- cor_mat[lower.tri(cor_mat)] == 0
            cor_diag <- cor_mat[diag(cor_mat)] == 1
