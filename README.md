@@ -41,19 +41,19 @@ coefs <- enlist_coefs(mdl) # Create coefficients
 get_coef1 <- make_coef_getter(mdl) # Using the model object directly
 get_coef2 <- make_coef_getter(coefs) # Using the list of coefficients we made
 get_coef("cyl:gear", coefs)
-#> $(\beta = -0.67, t = -1.27, s.e. = 0.53, p=0.213)$
+#> $(\hat\beta = -0.67, t = -1.27, s.e. = 0.53, p=0.213)$
 get_coef1("cyl:gear")
-#> $(\beta = -0.67, t = -1.27, s.e. = 0.53, p=0.213)$
+#> $(\hat\beta = -0.67, t = -1.27, s.e. = 0.53, p=0.213)$
 get_coef2("cyl:gear")
-#> $(\beta = -0.67, t = -1.27, s.e. = 0.53, p=0.213)$
+#> $(\hat\beta = -0.67, t = -1.27, s.e. = 0.53, p=0.213)$
 ```
 
 Here we can get the formatted values of a write up easily with in-line R
 code. You could say something like: We found no significant effect of
-cylinder (*β*=−0.18,*t*=−0.09,*s*.*e*.=2.05,*p*=0.931) or gear
-(*β*=5.14,*t*=1.41,*s*.*e*.=3.63,*p*=0.168) nor a significant
-interaction between the two
-(*β*=−0.67,*t*=−1.27,*s*.*e*.=0.53,*p*=0.213).
+cylinder (*β̂* =  − 0.18, *t* =  − 0.09, *s*.*e*. = 2.05, *p* = 0.931) or
+gear (*β̂* = 5.14, *t* = 1.41, *s*.*e*. = 3.63, *p* = 0.168) nor a
+significant interaction between the two
+(*β̂* =  − 0.67, *t* =  − 1.27, *s*.*e*. = 0.53, *p* = 0.213).
 
 You can also use these with Bayesian models fit with `brms`, which will
 give you the *β* estimate as well as the credible interval.
