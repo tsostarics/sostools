@@ -17,8 +17,12 @@ is_orthogonal <- function(.contrasts) {
            cor_mat <- round(stats::cor(m), digits = 10L)
            cor_upper <- cor_mat[upper.tri(cor_mat)] == 0
            cor_lower <- cor_mat[lower.tri(cor_mat)] == 0
-           cor_diag <- cor_mat[diag(cor_mat)] == 1
-           all(c(cor_upper, cor_lower, cor_diag))
+
+           # 2 level factor contrasts return logical(0)s
+           if (identical(cor_upper, logical(0)) || identical(cor_lower, logical(0)))
+             return(FALSE)
+
+           all(c(cor_upper, cor_lower))
          },
          TRUE)
 
