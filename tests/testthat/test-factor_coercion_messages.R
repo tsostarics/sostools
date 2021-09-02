@@ -10,7 +10,7 @@ test_that("Messaging when there are remaining factors works", {
     dplyr::mutate(dplyr::across(tidyselect::everything(), factor))
   tst_data$three <- ordered(tst_data$three)
   expect_message(.msg_if_remaining_factors(tst_data, "a"),
-                 regexp= "You didn't set these factors, expect .+: two three four")
+                 regexp= "unset factors: two three four")
 
 })
 
@@ -24,23 +24,23 @@ test_that("Messaging if user tries to reset ordered factors works", {
 
 test_that("Messaging if factor coercion occurs works",{
   expect_message(.msg_if_coerced_to_factors(c('a','b')),
-                 regexp = "Converting these to factors")
+                 regexp = "Converting to factors")
 })
 
 test_that("Warning if one level factor works", {
   tstdf <- data.frame(a = 1:5,
              b = factor("a"))
 
-  expect_warning(enlist_contrasts(tstdf, b ~ sum_code), regexp = "These factors have only one level")
-  expect_warning(glimpse_contrasts(tstdf, b ~ treatment_code), regexp = "These factors have only one level")
-  expect_warning(set_contrasts(tstdf, b ~ treatment_code), regexp = "These factors have only one level")
+  expect_warning(enlist_contrasts(tstdf, b ~ sum_code), regexp = "only one level")
+  expect_warning(glimpse_contrasts(tstdf, b ~ treatment_code), regexp = "only one level")
+  expect_warning(set_contrasts(tstdf, b ~ treatment_code), regexp = "only one level")
 })
 
 test_that("Warning if one level works with different parameters", {
   tstdf <- data.frame(one = factor("a"),
                       two = factor("b"),
                       three = factor(c('a','b','c')))
-  expect_warning(.warn_if_onelevel(c("one","two")), regexp = "only one level,")
-  expect_warning(.warn_if_onelevel(NULL, tstdf, c('one','two','three')), regexp = "only one level,")
+  expect_warning(.warn_if_onelevel(c("one","two")), regexp = "only one level")
+  expect_warning(.warn_if_onelevel(NULL, tstdf, c('one','two','three')), regexp = "only one level")
   expect_error(.warn_if_onelevel(NULL), regexp = "model data and factors")
 })
