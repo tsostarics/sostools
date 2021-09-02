@@ -48,6 +48,7 @@ glimpse_contrasts <- function(model_data,
   scheme_labels <- .get_scheme_labels(params, formulas)
   reference_levels <- .get_reference_levels(contrast_list, params, formulas)
   orthogonal_contrasts <- vapply(contrast_list, is_orthogonal, TRUE, USE.NAMES = FALSE)
+  centered_contrasts <- vapply(contrast_list, is_centered, TRUE, USE.NAMES = FALSE)
   intercept_interpretations <- vapply(contrast_list, interpret_intercept,"char", USE.NAMES = FALSE)
 
   # Double check that dropped trends are only included for polynomial contrasts
@@ -62,6 +63,7 @@ glimpse_contrasts <- function(model_data,
                             "reference" = reference_levels,
                             "intercept" = intercept_interpretations,
                             "orthogonal" = orthogonal_contrasts,
+                            "centered" = centered_contrasts,
                             "dropped_trends" = dropped_trends,
                             "explicitly_set" = TRUE)
 
@@ -137,6 +139,8 @@ glimpse_contrasts <- function(model_data,
                              "char")
   intercept_interpretations <- vapply(new_contrasts, interpret_intercept, "char", USE.NAMES = FALSE)
   orthogonal_contrasts <- vapply(new_contrasts, is_orthogonal, TRUE)
+  centered_contrasts <- vapply(new_contrasts, is_centered, TRUE)
+
   dropped_trends <- rep(NA, length(unset_factors)) # Trends are never dropped w/ R's defaults
 
   if (verbose)
@@ -149,6 +153,7 @@ glimpse_contrasts <- function(model_data,
                             "reference"      = reference_levels,
                             "intercept"      = intercept_interpretations,
                             "orthogonal"     = orthogonal_contrasts,
+                            "centered"       = centered_contrasts,
                             "dropped_trends" = dropped_trends,
                             "explicitly_set" = FALSE)
 
@@ -180,6 +185,7 @@ glimpse_contrasts <- function(model_data,
                 "reference"      = NA_character_,
                 "intercept"      = NA_character_,
                 "orthogonal"     = NA,
+                "centered"       = NA,
                 "dropped_trends" = NA_character_,
                 "explicitly_set" = NA)
 }
