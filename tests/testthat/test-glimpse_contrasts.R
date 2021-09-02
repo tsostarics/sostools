@@ -28,7 +28,7 @@ test_that("Glimpse works", {
   expect_equal(tst$reference, c(NA, '5', '4'), ignore_attr = TRUE) # need unname
   expect_equal(tst$intercept, c('grand mean', 'grand mean', 'mean(4)'), ignore_attr = TRUE)
   expect_equal(tst$orthogonal, c(TRUE, FALSE, FALSE))
-  expect_equal(tst$centered, c(FALSE, TRUE, FALSE))
+  expect_equal(tst$centered, c(TRUE, TRUE, FALSE))
   expect_equal(tst$dropped_trends, c("3,4,5",NA,NA))
   expect_equal(tst$explicitly_set, c(TRUE,TRUE,FALSE))
 })

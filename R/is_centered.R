@@ -12,6 +12,6 @@ is_centered <- function(.contrasts) {
     .contrasts <- list(.contrasts)
 
   # Contrasts centered if column sums are all 0
-  vapply(.contrasts, function(m) all(colSums(m) == 0), TRUE)
+  vapply(.contrasts, function(m) all(round(colSums(m),10) == 0), TRUE)
 
 }
