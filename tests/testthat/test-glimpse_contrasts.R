@@ -66,5 +66,30 @@ test_that("Grouping columns aren't detected as ordered", {
     dplyr::group_by(cyl)
 
   # Avoid message from .warn_if_nondefault
-  expect_warning(glimpse_contrasts, NA)
+  expect_warning(glimpse_contrasts(tst), NA)
+})
+
+test_that("Clean schemes works", {
+  tst <- mtcars %>%
+    dplyr::mutate(cyl = factor(cyl), carb = ordered(carb), gear = factor(gear))
+
+  scheme_names <- glimpse_contrasts(tst, clean.schemes = TRUE, verbose = FALSE)$scheme
+  # Avoid message from .warn_if_nondefault
+  expect_equal(scheme_names, c('treatment','treatment','orth_polynomial'))
+})
+
+test_that("List output works", {
+  schemes <- list(cyl ~ helmert_code,
+                  gear ~ orth_polynomial_code)
+  glimpse_list <- glimpse_contrasts(mtcars, schemes, return.list = TRUE, verbose = FALSE)
+
+  expect_equal(length(glimpse_list), 2L)
+  expect_equal(glimpse_list$contrasts, enlist_contrasts(mtcars, schemes, verbose = FALSE))
+})
+
+test_that("Default factors works", {
+  tst <-  data.frame(onelevel = factor(c('a','a','a')))
+
+  glimpse_contrasts(tst, incl.one.levels = TRUE)
+
 })

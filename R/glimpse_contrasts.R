@@ -42,7 +42,8 @@ glimpse_contrasts <- function(model_data,
   params <- params[!is_onelevel_factor]
 
   # Extract various information
-  factor_names <- names(contrast_list)
+  # factor_names <- .cols_where(model_data, is.factor, return.names = TRUE)
+  set_factors <- names(contrast_list)
   factor_sizes <- vapply(contrast_list, nrow, 1L, USE.NAMES = FALSE)
   level_names <- unname(lapply(contrast_list, rownames))
   scheme_labels <- .get_scheme_labels(params, formulas)
@@ -55,7 +56,7 @@ glimpse_contrasts <- function(model_data,
   which_are_polynomials <- vapply(scheme_labels, .is_polynomial_scheme, TRUE)
   dropped_trends[!which_are_polynomials] <- NA
 
-  glimpse <- tibble::tibble("factor" = factor_names,
+  glimpse <- tibble::tibble("factor" = set_factors,
                             "n_levels" = factor_sizes,
                             "level_names" = level_names,
                             "scheme" = scheme_labels,
@@ -68,7 +69,7 @@ glimpse_contrasts <- function(model_data,
 
 
   if (all.factors)
-    glimpse <- rbind(glimpse, .glimpse_default_factors(model_data, factor_names, incl.one.levels, verbose))
+    glimpse <- rbind(glimpse, .glimpse_default_factors(model_data, set_factors, incl.one.levels, verbose))
 
   if (clean.schemes)
     glimpse$scheme <- .clean_schemes(glimpse$scheme)
@@ -202,7 +203,7 @@ glimpse_contrasts <- function(model_data,
 
   list("unset_factors" = unset_factors,
        "is_ordered_factor" = is_ordered_factor,
-       "one_level_factors" <- one_level_factors)
+       "one_level_factors" = one_level_factors)
 
 }
 
