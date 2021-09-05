@@ -9,8 +9,9 @@ test_that("Messaging when there are remaining factors works", {
     ) %>%
     dplyr::mutate(dplyr::across(tidyselect::everything(), factor))
   tst_data$three <- ordered(tst_data$three)
+  re <- paste("unset factors:", crayon::blue("two"), crayon::red("three"), crayon::blue("four"))
   expect_message(.msg_if_remaining_factors(tst_data, "a"),
-                 regexp= "unset factors: two three four")
+                 regexp = gsub("\\[", "\\\\[", re))
 
 })
 

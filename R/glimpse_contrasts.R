@@ -33,7 +33,7 @@ glimpse_contrasts <- function(model_data,
   contrast_list <- enlist_contrasts(model_data, ..., 'verbose' = verbose)
   params <- lapply(formulas, .make_parameters)
 
-  # Ignore factors with only 1 level to avoid undefined contrasts
+  # Ignore explicitly set factors that actually only have one level
   is_onelevel_factor <- vapply(params,
                                function(x) nlevels(model_data[[x[["factor_col"]]]]) == 1L,
                                TRUE)
@@ -118,7 +118,7 @@ glimpse_contrasts <- function(model_data,
   fct_info <- .get_factor_info(model_data, set_factors, verbose)
   unset_factors <- fct_info[["unset_factors"]]
   is_ordered_factor <- fct_info[["is_ordered_factor"]]
-
+  unset_factors <- unset_factors[!unset_factors %in% fct_info[["one_level_factors"]]]
   # Extract contrasts from the factor columns
   new_contrasts <- lapply(unset_factors, function(x) contrasts(model_data[[x]]))
 
@@ -200,9 +200,8 @@ glimpse_contrasts <- function(model_data,
   # Filter out any factors that only have 1 level to avoid undefined contrasts
   # Happens when character vectors with only 1 value are converted to a factor
   # without specifying the levels parameter in factor()
-  is_one_level <- vapply(unset_factors,
-                         function(x) nlevels(model_data[[x]]) == 1L,
-                         TRUE)
+  is_one_level <- .cols_where(model_data, .is.onelevel, use.names = TRUE)
+  is_one_level <- is_one_level[names(is_one_level) %in% unset_factors]
   is_ordered_factor <- is_ordered_factor[!is_one_level]
   unset_factors <- unset_factors[!is_one_level]
   one_level_factors <- names(is_one_level)[is_one_level]
@@ -214,32 +213,6 @@ glimpse_contrasts <- function(model_data,
 }
 
 
-#' Get columns where
-#'
-#' Helper to avoid the use of tidyselect and dplyr::select, returns either a
-#' logical vector (optionally named) or a character vector of which columns
-#' satisfy the given function
-#'
-#' @param model_data Model data
-#' @param fx Function to apply, must be something that returns a logical value.
-#' Usually either `is.factor` or `is.ordered`
-#' @param use.names Whether the resulting vector should be named
-#' @param return.names Whether names (where the fx returns TRUE) should be
-#' returned instead of a logical vector. Overwrites use.names.
-#'
-#' @return optionally named logical vector or character vector
-.cols_where <- function(model_data, fx, use.names = FALSE, return.names = FALSE) {
-  cnames <- colnames(model_data)
-  if (return.names)
-    use.names <- TRUE
-  cols <- vapply(cnames,
-                 function(x) fx(model_data[[x]]),
-                 FUN.VALUE = TRUE,
-                 USE.NAMES = use.names)
-  if (return.names)
-    return(cnames[cols])
-  cols
-}
 
 #' Warn user if nondefault contrasts are set
 #'

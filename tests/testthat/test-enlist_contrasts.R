@@ -1,5 +1,3 @@
-
-
 test_that("Names of resulting list of contrasts correct", {
   tst_data <-
     tibble::tribble(

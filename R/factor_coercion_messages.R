@@ -80,15 +80,12 @@
 #'
 #' @return nothing, just sends a message if needed
 .msg_if_remaining_factors <- function(model_data, specified_vars) {
-  column_classes <- lapply(model_data, class)
-  which_are_factors <- vapply(column_classes,
-                              function(x) "factor" %in% x,
-                              FUN.VALUE = TRUE,
-                              USE.NAMES = TRUE)
-  which_are_ordered <- vapply(column_classes,
-                              function(x) "ordered" %in% x,
-                              FUN.VALUE = TRUE,
-                              USE.NAMES = TRUE)
+  which_are_factors <- .cols_where(model_data, is.factor, use.names = TRUE)
+  which_are_ordered <- .cols_where(model_data, is.ordered, use.names = TRUE)
+  which_are_onelevel <- .cols_where(model_data, .is.onelevel, use.names = TRUE)
+  which_are_factors <- which_are_factors[!which_are_onelevel]
+  which_are_ordered <- which_are_ordered[!which_are_onelevel]
+
   # Filter named logical vector to be only those where TRUE
   factor_cols <- which_are_factors[which_are_factors]
   factor_names <- names(factor_cols)

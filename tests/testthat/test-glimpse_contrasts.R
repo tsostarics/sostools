@@ -67,7 +67,7 @@ test_that("Grouping columns aren't detected as ordered", {
     dplyr::group_by(cyl)
 
   # Avoid message from .warn_if_nondefault
-  expect_warning(glimpse_contrasts(tst), NA)
+  expect_warning(glimpse_contrasts(tst, verbose = FALSE), NA)
 })
 
 test_that("Clean schemes works", {
@@ -88,9 +88,13 @@ test_that("List output works", {
   expect_equal(glimpse_list$contrasts, enlist_contrasts(mtcars, schemes, verbose = FALSE))
 })
 
-test_that("Default factors works", {
-  tst <-  data.frame(onelevel = factor(c('a','a','a')))
+test_that("One level factor glimpse works", {
+  tst <-  data.frame(onelevel = factor('a'),
+                     twolevel = factor(c('a','b')))
 
-  glimpse_contrasts(tst, incl.one.levels = TRUE)
+  glimpse <- glimpse_contrasts(tst, incl.one.levels = TRUE, verbose = FALSE)
+
+  expect_equal(glimpse$explicitly_set, c(FALSE, NA))
+  expect_equal(glimpse$factor, c("twolevel","onelevel"))
 
 })
