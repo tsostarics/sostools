@@ -100,3 +100,8 @@ test_that("default 2 level factor works", {
 
   expect_equal(test_matrix, contrast_code(factor(1:2)))
 })
+
+test_that("Non matrix or function error works", {
+  expect_error(contrast_code(factor(c(1,2,3)), c(0,1,0,0,0,1)), regexp = "Invalid value for code_by")
+})
+
