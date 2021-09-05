@@ -51,7 +51,7 @@
   }
 
   one_level_string <- paste(crayon::cyan(one_level_factors), collapse = " ")
-  warning(glue::glue("These factors have only one level, so contrasts are undefined: {one_level_string}"),
+  warning(glue::glue("Contrasts undefined for factors with only one level: {one_level_string}"),
           call. = FALSE)
   return(invisible(1))
 }
@@ -66,7 +66,7 @@
 #' @return Nothing, sends a message if needed
 .msg_if_coerced_to_factors <- function(which_to_factors) {
   varnames <- crayon::blue(paste(which_to_factors, collapse = ' '))
-  message(glue::glue("Converting these to factors: {varnames}"))
+  message(glue::glue("Converting to factors: {varnames}"))
 }
 
 
@@ -106,6 +106,6 @@
                                 crayon::red(x),
                                 crayon::blue(x)),
                        "char") |> paste(collapse = " ")
-    message(glue::glue("You didn't set these factors, expect {default_contrasts}: {varnames}"))
+    message(glue::glue("Expect {default_contrasts} for unset factors: {varnames}"))
   }
 }

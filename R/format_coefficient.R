@@ -16,7 +16,7 @@ format_coef <- function(coeff, clist, stat_name) {
   # stat_name <- names(clist[[coeff]][4L])
   stat_var <- gsub(" *value", "", stat_name)
   stat_val <- clist[[coeff]][["statistic"]]
-  coef_symbol <- ifelse(grepl("\\d\\|\\d", coeff), paste0("\\hat\\theta_{",coeff,"}"), "\\beta")
+  coef_symbol <- ifelse(grepl("\\d\\|\\d", coeff), paste0("\\hat\\theta_{",coeff,"}"), "\\hat\\beta")
   glue::glue("$({coef_symbol} = {beta}, {stat_var} = {stat_val}, s.e. = {se}, {p.value})$")
 }
 
