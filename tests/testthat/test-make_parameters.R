@@ -63,3 +63,8 @@ test_that("Different combinations of formula operations work", {
               function(ps)
               expect_equal(ps, params$f11))
 })
+
+test_that("Operator checking works", {
+  expect_true(.is_operator(sym('+')))
+  expect_false(.is_operator(sym('a')))
+})
