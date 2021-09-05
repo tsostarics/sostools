@@ -24,9 +24,7 @@ knitr::opts_chunk$set(
 This is just a collection of functions I use in my research that I use
 frequently. Other functions I use infrequently can be found in my `snippets`
 repo. Since a lot of this is stuff that I use for my personal work,
-it's not guaranteed to work flawlessly in other contexts.The contrast coding 
-functions however are fairly general and will likely be exported into its own 
-package in the future once I feel it's ready.  
+it's not guaranteed to work flawlessly in other contexts.
 
 ## Installation
 
@@ -65,4 +63,5 @@ the $\beta$ estimate as well as the credible interval.
 
 ## Contrast coding functionality
 
-See the `contrasts` vignette with `vignette('contrasts', 'sostools')`.
+This functionality has been exported to a standalone package, please visit
+[tsostarics/contrastable](https://github.com/tsostarics/contrastable)
