@@ -15,7 +15,7 @@
 
   latex_table <-
     coefs |>
-    dplyr::mutate(p.value = scales::pvalue(p.value),
+    dplyr::mutate(p.value = format_tbl_pvals(p.value),
                   term = gsub("_","\\\\_",term),
                   term = ifelse(coef.type == 'intercept',
                                 paste0("$\\theta_{",term,"}$"),

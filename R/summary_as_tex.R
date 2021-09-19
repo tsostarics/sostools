@@ -47,6 +47,7 @@ summary_as_tex <- function(model,
     change_call[[1]] <- sym(".summary_as_tex.clmm")
     return(eval(change_call))
   }
+
   tidy_fx <- .get_tidy_fx(model)
   outformat <- .get_knitr_table_type()
 
@@ -57,7 +58,7 @@ summary_as_tex <- function(model,
 
   summary_table <-
     coefs |>
-    dplyr::mutate(p.value = scales::pvalue(p.value),
+    dplyr::mutate(p.value = format_tbl_pvals(p.value),
                   term = gsub("_","\\\\_",term))
   if ("group" %in% names(summary_table)){
     summary_table <-
@@ -100,6 +101,12 @@ summary_as_tex <- function(model,
     latex_table <- gsub(r"(begin\{tabular\}\[t\]\{l)", r"(begin\{tabular*\}\{\\textwidth\}\{l@\{\\extracolsep\{\\fill\}\})", latex_table)
     latex_table <- gsub(r"(end\{tabular\})",r"(end\{tabular*\})", latex_table)
   }
+
+  note <- "\\\\flushleft
+*p\\\\textless{}0.05; **p\\\\textless{}0.01; ***p\\\\textless{}0.001
+\\\\end\\{table\\}"
+
+  latex_table <- gsub(r"(\\end\{table\})", note, latex_table)
   latex_table
 }
 

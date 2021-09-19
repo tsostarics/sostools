@@ -27,3 +27,27 @@ format_pval = function(p.value, symbol = "=", use_stars = FALSE){
     return(paste0("p", symbol, p.value, stars))
   }
 }
+
+format_tbl_pvals <- function(p.values) {
+  signif_stars <-
+    vapply(p.values,
+
+         function(p.value) {
+           if (is.na(p.value))
+             return("")
+           if (p.value < .001) {
+             stars <- "***"
+           } else if (p.value < .01) {
+             stars <- "**"
+           } else if (p.value < .05) {
+             stars <- "*"
+           } else {
+             stars <- ""
+           }
+           stars
+         },
+         "char")
+
+ formatted_vals <- scales::pvalue(p.values)
+ paste0(formatted_vals, signif_stars)
+}

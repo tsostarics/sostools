@@ -9,7 +9,7 @@
 #' @param stat_name Name of the statistic
 #' @return A string of coefficient descriptions
 #' @export
-format_coef <- function(coeff, clist, stat_name) {
+format_coef <- function(coeff, clist, stat_name, omit = "se") {
   p.value <- format_pval(clist[[coeff]][[ncol(clist[[coeff]])]])
   beta <- clist[[coeff]][["estimate"]]
   se <- clist[[coeff]][["std.error"]]
@@ -17,7 +17,11 @@ format_coef <- function(coeff, clist, stat_name) {
   stat_var <- gsub(" *value", "", stat_name)
   stat_val <- clist[[coeff]][["statistic"]]
   coef_symbol <- ifelse(grepl("\\d\\|\\d", coeff), paste0("\\hat\\theta_{",coeff,"}"), "\\hat\\beta")
-  glue::glue("$({coef_symbol} = {beta}, {stat_var} = {stat_val}, s.e. = {se}, {p.value})$")
+
+  coef_string <-   glue::glue("$({coef_symbol} = {beta}, {stat_var} = {stat_val}, s.e. = {se}, {p.value})$")
+
+  if ('se' %in% omit)
+    gsub(" s\\.e\\. = [^ ]+,","",coef_string)
 }
 
 #' Title
