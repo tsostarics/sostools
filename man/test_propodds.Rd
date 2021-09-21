@@ -4,12 +4,25 @@
 \alias{test_propodds}
 \title{Proportional odds Testing}
 \usage{
-test_propodds(ord_data, model_formula)
+test_propodds(
+  ord_data,
+  model_formula,
+  clm_obj = NULL,
+  .link = "logit",
+  control = list()
+)
 }
 \arguments{
 \item{ord_data}{Data frame with your data}
 
 \item{model_formula}{The model formula to provide to a glm call}
+
+\item{clm_obj}{Optional CLM or CLMM object to compare estimates to}
+
+\item{.link}{Link function, defaults to logit for proportional odds model,
+message is sent if this differs from clm_obj's link function}
+
+\item{control}{Control to use for mixed models, defaults to}
 }
 \value{
 A data frame with estimates and confidence intervals for each scale response

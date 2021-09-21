@@ -4,7 +4,7 @@
 \alias{format_coef}
 \title{Format coefficients}
 \usage{
-format_coef(coeff, clist, stat_name)
+format_coef(coeff, clist, stat_name, omit = "se")
 }
 \arguments{
 \item{coeff}{Which coefficient to format}

@@ -4,12 +4,10 @@
 \alias{plot_propodds}
 \title{Plot proportional odds output}
 \usage{
-plot_propodds(propodds_results, resp_var = "scale_response")
+plot_propodds(propodds_results)
 }
 \arguments{
 \item{propodds_results}{Output of test_propodds}
-
-\item{resp_var}{name of response variable}
 }
 \description{
 A very simple helper to plot the estimates from the proportional odds tester.
