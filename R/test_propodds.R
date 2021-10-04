@@ -163,10 +163,11 @@ test_propodds <- function(ord_data, model_formula, clm_obj = NULL, .link = "logi
 #'
 #' @export
 plot_propodds <- function(propodds_results) {
-  resp_var <- colnames(tst)[1L]
+  resp_var <- colnames(propodds_results)[1L]
   clm_region <- NULL
   if ('clm_high' %in% colnames(propodds_results))
-    clm_region <- ggplot2::geom_ribbon(aes(x = !!sym(resp_var),
+    clm_region <-
+    ggplot2::geom_ribbon(aes(x = !!sym(resp_var),
                                            ymax = clm_high,
                                            ymin = clm_low),
                                        fill = "#6edbbe",
