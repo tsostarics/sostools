@@ -15,6 +15,7 @@
 #'
 #' @return A data frame with estimates and confidence intervals for each scale response
 #' @export
+#'
 test_propodds <- function(ord_data, model_formula, clm_obj = NULL, .link = "logit", control = list()) {
   if (!is.null(clm_obj)) {
     if (!class(clm_obj) %in% c('clmm','clm'))
