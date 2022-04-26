@@ -98,8 +98,8 @@ test_propodds <- function(ord_data, model_formula, clm_obj = NULL, .link = "logi
     `colnames<-`(c('term','clm_estimate'))
 
   confidence_intervals <-
-    confint(clm_obj, level = .99) |>
-    as_tibble(rownames = "term") |>
+    stats::confint(clm_obj, level = .99) |>
+    tibble::as_tibble(rownames = "term") |>
     `colnames<-`(c('term',"clm_low","clm_high"))
 
   results |>
@@ -177,16 +177,24 @@ plot_propodds <- function(propodds_results) {
                                        inherit.aes = FALSE)
 
   requireNamespace("ggplot2", quietly = TRUE)
+
+  scale_range <- range(propodds_results[[resp_var]])
+  scale_values <- seq(from=scale_range[1], to = scale_range[2])
+  threshold_labels <- paste0(scale_values-1, "|", scale_values)
+
   propodds_results |>
     dplyr::filter(term != '(Intercept)') |>
     dplyr::group_by(term) |>
     dplyr::mutate(check = ifelse(check == 1, "red","black"),
-                  converged = factor(converged)) |>
+                  converged = factor(converged),
+                  threshold = factor(paste0(!!sym(resp_var)-1,"|", !!sym(resp_var)))) |>
     ggplot2::ggplot(aes(x = !!sym(resp_var), y = estimate, ymax = ci_high, ymin = ci_low, color = I(check), shape = converged)) +
     clm_region +
+    ggplot2::scale_x_continuous(breaks = scale_values, labels = threshold_labels) +
     ggplot2::geom_point() +
     ggplot2::geom_errorbar() +
     # ggplot2::geom_hline(aes(yintercept = mn), linetype = "dashed") +
     ggplot2::facet_wrap(~term) +
-    ggplot2::theme_minimal()
-}
+    ggplot2::theme_minimal() +
+    ggplot2::xlab("Threshold")
+    }
