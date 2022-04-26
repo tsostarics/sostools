@@ -146,7 +146,8 @@ test_propodds <- function(ord_data, model_formula, clm_obj = NULL, .link = "logi
 
   # Get 99% wald confidence intervals and return results
   ci <- stats::confint(mdl, method = "Wald",level = .99)
-  ci <- ci[!is.na(ci[,1]) | !is.na(ci[,2]),] # remove any random effects
+  #TODO: fix the na handling here, as random effects don't work right
+  ci <- ci[!grepl("\\.sig", rownames(ci)),] # remove any random effects
   tibble::tibble(!!response_var := j,
                  term = names(coef_fx(mdl)),
                  estimate = coef_fx(mdl),
