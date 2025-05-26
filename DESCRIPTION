@@ -26,7 +26,8 @@ Suggests:
     MASS,
     rmarkdown,
     brms,
-    covr
+    covr,
+    png
 Config/testthat/edition: 3
 URL: https://github.com/tsostarics/sostools
 BugReports: https://github.com/tsostarics/sostools/issues

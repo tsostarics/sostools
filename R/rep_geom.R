@@ -42,7 +42,7 @@
 #'            color = "yellow")
 #'            }
 rep_geom <- function(geom_call, ...) {
-  requireNamespace("ggplot2", quietly = TRUE)
+  rlang::is_installed("ggplot2")
   # Extract quosure from the call so that any passed symbols aren't evaluated
   q <- rlang::enquos(...)
 
