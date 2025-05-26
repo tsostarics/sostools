@@ -14,7 +14,8 @@ Imports:
     dplyr,
     glue,
     rlang (>= 0.1.2),
-    tidyselect
+    tidyselect,
+    vctrs
 RoxygenNote: 7.3.2
 Suggests: 
     scales,
