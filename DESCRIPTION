@@ -11,8 +11,10 @@ Encoding: UTF-8
 LazyData: true
 Imports: 
     crayon,
+    dplyr,
     glue,
     rlang (>= 0.1.2),
+    tidyselect
 RoxygenNote: 7.3.2
 Suggests: 
     scales,
@@ -27,7 +29,8 @@ Suggests:
     rmarkdown,
     brms,
     covr,
-    png
+    png,
+    modelr
 Config/testthat/edition: 3
 URL: https://github.com/tsostarics/sostools
 BugReports: https://github.com/tsostarics/sostools/issues

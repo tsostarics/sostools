@@ -117,6 +117,7 @@ save_plot <- function(p,
 #' @export
 crop_white_margins <- function(x, new_margin = 15, overwrite = FALSE)
 {
+  rlang::is_installed("png")
   # Cut the saved image to remove excessive whitespace, leaving the specified new margin
   img <- png::readPNG(x)
   nudge <- 1L + as.integer(new_margin)
