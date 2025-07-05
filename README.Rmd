@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 # sostools
 
-<!-- badges: start -->
+<!-- badges: start 
 [![Codecov test coverage](https://codecov.io/gh/tsostarics/sostools/branch/master/graph/badge.svg)](https://codecov.io/gh/tsostarics/sostools?branch=master)
 <!-- badges: end -->
 

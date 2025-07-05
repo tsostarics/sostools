@@ -3,10 +3,8 @@
 
 # sostools
 
-<!-- badges: start -->
-
-[![Codecov test
-coverage](https://codecov.io/gh/tsostarics/sostools/branch/master/graph/badge.svg)](https://codecov.io/gh/tsostarics/sostools?branch=master)
+<!-- badges: start 
+[![Codecov test coverage](https://codecov.io/gh/tsostarics/sostools/branch/master/graph/badge.svg)](https://codecov.io/gh/tsostarics/sostools?branch=master)
 <!-- badges: end -->
 
 A collection of functions I frequently use in my research.
