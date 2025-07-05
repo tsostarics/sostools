@@ -5,11 +5,12 @@
 #' Given a model name, load the model to the current environment.
 #' eg: tar_load_model(exp1_pabt_WKSLP_mdl)
 #'
-#' @param model_path Path to rds file
+#' @param model_target_name Name of the target containing a path to an rds file
 #'
 #' @returns nothing, assigns to current environment
 #' @export
 tar_load_model <- function(model_target_name) {
+  rlang::is_installed("targets")
   target_name <- deparse1(substitute(model_target_name))
 
   assign(target_name, readRDS((file.path("Models", paste0(target_name, ".rds")))), pos = parent.frame())
@@ -22,14 +23,15 @@ tar_load_model <- function(model_target_name) {
 #' Note that the stored value of the TARGET is the PATH to the model, so it
 #' needs to be read with readRDS. This just wraps around that 2-step process.
 #'
-#' @param model_target_name
+#' @param model_target_name Name of the target containing a path to an rds file
 #'
 #' @returns object saved at the rds file
 #' @export
 tar_read_model <- function(model_target_name) {
+  rlang::is_installed("targets")
   target_name <- deparse1(substitute(model_target_name))
 
-  readRDS(tar_read_raw(target_name))
+  readRDS(targets::tar_read_raw(target_name))
 }
 
 

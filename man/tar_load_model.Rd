@@ -7,7 +7,7 @@
 tar_load_model(model_target_name)
 }
 \arguments{
-\item{model_path}{Path to rds file}
+\item{model_target_name}{Name of the target containing a path to an rds file}
 }
 \value{
 nothing, assigns to current environment

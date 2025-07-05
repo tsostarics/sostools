@@ -10,7 +10,8 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    crayon,
+    brms (>= 2.21.6),
+    cli,
     dplyr,
     glue,
     rlang (>= 0.1.2),
@@ -28,10 +29,18 @@ Suggests:
     stringr,
     MASS,
     rmarkdown,
-    brms,
     covr,
     png,
-    modelr
+    modelr,
+    rstan,
+    cmdstanr,
+    diffobj,
+    future,
+    RcppSimdJson,
+    bayestestR,
+    posterior,
+    mgcv,
+    targets
 Config/testthat/edition: 3
 URL: https://github.com/tsostarics/sostools
 BugReports: https://github.com/tsostarics/sostools/issues

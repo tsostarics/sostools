@@ -7,7 +7,7 @@
 tar_read_model(model_target_name)
 }
 \arguments{
-\item{model_target_name}{}
+\item{model_target_name}{Name of the target containing a path to an rds file}
 }
 \value{
 object saved at the rds file

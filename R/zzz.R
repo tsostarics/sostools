@@ -1,4 +1,6 @@
-
+utils::globalVariables(
+  c(".data")
+)
 
 .onLoad <- function(libname, pkgname){
   options(SOSTOOLS_SKIP_PLOT_SAVE = FALSE)
